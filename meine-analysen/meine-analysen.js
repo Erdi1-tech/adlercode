@@ -10,6 +10,7 @@
   const tabButtons = [...root.querySelectorAll("[data-analysis-tab]")];
   let activeTab = new URLSearchParams(window.location.search).get("tab") === "characters" ? "characters" : "films";
   let store = loadStore();
+  const currentUser = window.AdlercodeAuth?.currentUser?.() || null;
 
   function loadStore() {
     try {
@@ -63,10 +64,16 @@
       .at(-1) || "";
   }
 
+  function belongsToCurrentUser(key, item) {
+    if (!currentUser?.id) return false;
+    return item?.ownerId === currentUser.id || key.startsWith(`film:${currentUser.id}:`) || key.startsWith(`character:${currentUser.id}:`);
+  }
+
   function filmAnalyses() {
     return Object.entries(store)
       .filter(([key]) => key.startsWith("film:"))
       .map(([key, item]) => ({ key, item }))
+      .filter(({ key, item }) => belongsToCurrentUser(key, item))
       .filter(({ item }) => item?.["film-narrative"] || item?.moral || item?.["film-system"])
       .sort((a, b) => latestDate(b.item).localeCompare(latestDate(a.item)));
   }
@@ -75,6 +82,7 @@
     return Object.entries(store)
       .filter(([key]) => key.startsWith("character:"))
       .map(([key, item]) => ({ key, item }))
+      .filter(({ key, item }) => belongsToCurrentUser(key, item))
       .filter(({ item }) => item?.values)
       .sort((a, b) => (b.item.savedAt || "").localeCompare(a.item.savedAt || ""));
   }

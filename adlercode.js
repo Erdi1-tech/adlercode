@@ -13,12 +13,16 @@ if (siteHeader) {
     ["Bücher", "buecher/index.html"],
     ["Filmanalyse", "filmanalyse/index.html"],
     ["Meine Analysen", "meine-analysen/index.html"],
+    ["Community", "community/index.html"],
+    ["Nachrichten", "nachrichten/index.html"],
     ["Adler-Kodex", "adler-kodex/index.html"],
     ["FAQ", "faq/index.html"],
     ["Kontakt", "kontakt.html"],
   ];
   const authStorageKey = "adlercode-auth-v1";
   const authUsersKey = "adlercode-auth-users-v1";
+  const chatStorageKey = "adlercode-chats-v1";
+  const personalNavLabels = new Set(["Meine Analysen", "Nachrichten"]);
 
   function readJson(key, fallback) {
     try {
@@ -33,7 +37,8 @@ if (siteHeader) {
   }
 
   function currentUser() {
-    return readJson(authStorageKey, null);
+    const user = readJson(authStorageKey, null);
+    return user ? publicUser(user) : null;
   }
 
   function authRootPath(path) {
@@ -48,24 +53,51 @@ if (siteHeader) {
     return String(hash >>> 0);
   }
 
+  function avatarInitial(value) {
+    return String(value || "A").trim().charAt(0).toUpperCase() || "A";
+  }
+
+  function publicUser(user) {
+    if (!user) return null;
+    const username = user.username || user.name || "Adlercode Nutzer";
+    return {
+      id: user.id,
+      username,
+      name: username,
+      email: user.email || "",
+      avatarInitial: user.avatarInitial || avatarInitial(username || user.email),
+      avatarUrl: user.avatarUrl || "",
+      description: user.description || "",
+      privacy: user.privacy || "private",
+      createdAt: user.createdAt || new Date().toISOString(),
+    };
+  }
+
+  function allUsers() {
+    const users = readJson(authUsersKey, []);
+    return Array.isArray(users) ? users : [];
+  }
+
+  function saveUsers(users) {
+    writeJson(authUsersKey, users);
+  }
+
+  function saveSessionUser(user) {
+    writeJson(authStorageKey, publicUser(user));
+  }
+
   const authButton = document.createElement("button");
   authButton.className = "auth-header-button";
   authButton.type = "button";
 
   const guestStatus = document.createElement("span");
   guestStatus.className = "guest-status";
-  guestStatus.textContent = "Gastmodus";
-  guestStatus.setAttribute("aria-label", "Status: Gastmodus");
+  guestStatus.textContent = "Gast";
+  guestStatus.setAttribute("aria-label", "Status: Gast");
 
   const profileMenu = document.createElement("div");
   profileMenu.className = "profile-menu";
   profileMenu.hidden = true;
-  profileMenu.innerHTML = `
-    <a href="${authRootPath("profil/index.html")}">Profil</a>
-    <a href="${authRootPath("meine-analysen/index.html")}">Meine Analysen</a>
-    <a href="${authRootPath("profil/index.html#einstellungen")}">Einstellungen</a>
-    <button type="button" data-auth-logout>Abmelden</button>
-  `;
 
   const authDialog = document.createElement("div");
   authDialog.className = "auth-dialog";
@@ -90,7 +122,7 @@ if (siteHeader) {
         <button type="submit">Anmelden</button>
       </form>
       <form class="auth-form" data-auth-panel="register">
-        <label>Benutzername<input type="text" name="name" autocomplete="name" required /></label>
+        <label>Benutzername<input type="text" name="username" autocomplete="username" required /></label>
         <label>E-Mail<input type="email" name="email" autocomplete="email" required /></label>
         <label>Passwort<input type="password" name="password" autocomplete="new-password" required minlength="6" /></label>
         <button type="submit">Registrieren</button>
@@ -113,9 +145,9 @@ if (siteHeader) {
     <div class="auth-dialog-backdrop" data-save-prompt-close></div>
     <section class="auth-dialog-panel save-prompt-panel">
       <button type="button" class="auth-dialog-close" data-save-prompt-close aria-label="Dialog schließen">×</button>
-      <p class="eyebrow">Gastmodus</p>
-      <h2 id="save-prompt-title">Analyse speichern</h2>
-      <p>Um deine Analyse dauerhaft zu speichern und später wieder aufzurufen, benötigst du ein kostenloses Benutzerkonto.</p>
+      <p class="eyebrow" data-save-prompt-eyebrow>Gastmodus</p>
+      <h2 id="save-prompt-title" data-save-prompt-title>Analyse speichern</h2>
+      <p data-save-prompt-text>Um deine Analyse dauerhaft zu speichern und später wieder aufzurufen, benötigst du ein kostenloses Benutzerkonto.</p>
       <div class="save-prompt-actions">
         <button type="button" data-save-prompt-login>Anmelden</button>
         <button type="button" data-save-prompt-register>Registrieren</button>
@@ -142,12 +174,44 @@ if (siteHeader) {
   mobilePanel.setAttribute("aria-label", "Mobile Navigation");
   mobilePanel.innerHTML = `
     <p>NAVIGATION</p>
-    ${navItems.map(([label, path]) => `<a href="${new URL(path, siteRoot).href}">${label}</a>`).join("")}
+    <div data-mobile-nav-links></div>
     <button type="button" data-auth-open>Anmelden</button>
   `;
 
   siteHeader.prepend(mobileToggle);
   siteHeader.append(guestStatus, authButton, profileMenu, mobilePanel, authDialog, savePromptDialog);
+
+  function unreadMessageCount(user = currentUser()) {
+    if (!user?.id) return 0;
+    const store = readJson(chatStorageKey, { chats: {} });
+    return Object.values(store.chats || {}).reduce((sum, chat) => {
+      if (!chat.participantIds?.includes(user.id) || (chat.deletedFor || []).includes(user.id)) return sum;
+      return sum + (chat.messages || []).filter((message) => message.senderId !== user.id && !(message.readBy || []).includes(user.id)).length;
+    }, 0);
+  }
+
+  function navLabel(label, user = currentUser()) {
+    if (label !== "Nachrichten") return label;
+    const count = unreadMessageCount(user);
+    return count ? `Nachrichten (${count})` : "Nachrichten";
+  }
+
+  function renderHeaderNavigation() {
+    const user = currentUser();
+    const visibleItems = navItems.filter(([label]) => user || !personalNavLabels.has(label));
+    const links = visibleItems.map(([label, path]) => `<a href="${new URL(path, siteRoot).href}">${navLabel(label, user)}</a>`).join("");
+    const desktopNav = siteHeader.querySelector(".site-nav");
+    const mobileLinks = mobilePanel.querySelector("[data-mobile-nav-links]");
+    if (desktopNav) desktopNav.innerHTML = links;
+    if (mobileLinks) mobileLinks.innerHTML = links;
+    profileMenu.innerHTML = `
+      <a href="${authRootPath("nachrichten/index.html")}">${navLabel("Nachrichten", user)}</a>
+      <a href="${authRootPath("profil/index.html")}">Profil</a>
+      <a href="${authRootPath("meine-analysen/index.html")}">Meine Analysen</a>
+      <a href="${authRootPath("profil/index.html#einstellungen")}">Einstellungen</a>
+      <button type="button" data-auth-logout>Abmelden</button>
+    `;
+  }
 
   function setAuthTab(name) {
     authDialog.querySelectorAll("[data-auth-tab]").forEach((button) => {
@@ -170,10 +234,22 @@ if (siteHeader) {
     authButton.setAttribute("aria-expanded", "false");
     mobilePanel.querySelector("[data-auth-open]").textContent = user ? "Profil" : "Anmelden";
     guestStatus.hidden = Boolean(user);
+    renderHeaderNavigation();
     document.dispatchEvent(new CustomEvent("adlercode:auth-change", { detail: { user } }));
   }
 
-  function openSavePrompt() {
+  function openSavePrompt(options = {}) {
+    const promptTitle = savePromptDialog.querySelector("[data-save-prompt-title]");
+    const promptText = savePromptDialog.querySelector("[data-save-prompt-text]");
+    const promptEyebrow = savePromptDialog.querySelector("[data-save-prompt-eyebrow]");
+    if (promptEyebrow) promptEyebrow.textContent = options.eyebrow || "Gastmodus";
+    if (promptTitle) promptTitle.textContent = options.title || "Analyse speichern";
+    if (promptText) {
+      promptText.textContent =
+        options.text || "Um deine Analyse dauerhaft zu speichern und später wieder aufzurufen, benötigst du ein kostenloses Benutzerkonto.";
+    }
+    const guestButton = savePromptDialog.querySelector(".save-prompt-ghost");
+    if (guestButton) guestButton.hidden = options.showGuest === false;
     profileMenu.hidden = true;
     savePromptDialog.hidden = false;
     document.body.classList.add("is-auth-dialog-open");
@@ -205,15 +281,117 @@ if (siteHeader) {
   }
 
   function loginUser(user) {
-    writeJson(authStorageKey, user);
+    saveSessionUser(user);
     closeAuthDialog();
     updateAuthUi();
+  }
+
+  function updateCurrentUser(updates = {}) {
+    const sessionUser = currentUser();
+    if (!sessionUser) return null;
+    const users = allUsers();
+    const nextUsers = users.map((user) => {
+      if (user.id !== sessionUser.id) return user;
+      return {
+        ...user,
+        username: updates.username || user.username,
+        avatarInitial: updates.avatarInitial || avatarInitial(updates.username || user.username),
+        description: updates.description ?? user.description ?? "",
+        privacy: updates.privacy || user.privacy || "private",
+        updatedAt: new Date().toISOString(),
+      };
+    });
+    const nextUser = nextUsers.find((user) => user.id === sessionUser.id) || { ...sessionUser, ...updates };
+    saveUsers(nextUsers);
+    saveSessionUser(nextUser);
+    updateAuthUi();
+    return publicUser(nextUser);
+  }
+
+  function loadChatStore() {
+    const store = readJson(chatStorageKey, { chats: {} });
+    return store && typeof store === "object" && store.chats ? store : { chats: {} };
+  }
+
+  function saveChatStore(store) {
+    writeJson(chatStorageKey, store);
+  }
+
+  function normalizeParticipant(participant) {
+    const fallbackName = participant?.username || participant?.name || "Adlercode Nutzer";
+    return {
+      id: participant?.id || `user-${String(fallbackName).toLowerCase().replace(/[^a-z0-9]+/g, "-") || "nutzer"}`,
+      username: fallbackName,
+      name: fallbackName,
+      avatarInitial: participant?.avatarInitial || avatarInitial(fallbackName),
+      avatarUrl: participant?.avatarUrl || "",
+    };
+  }
+
+  function chatIdFor(userId, participantId, context = {}) {
+    const pair = [userId, participantId].sort().join("--");
+    return `chat-${pair}`;
+  }
+
+  function openChatPrompt() {
+    openSavePrompt({
+      title: "Nachricht senden",
+      text: "Bitte melde dich an oder registriere dich, um Nachrichten zu senden.",
+      showGuest: false,
+    });
+  }
+
+  function startChat(participant, context = {}) {
+    const user = currentUser();
+    if (!user) {
+      openChatPrompt();
+      return false;
+    }
+    const otherUser = normalizeParticipant(participant);
+    if (!otherUser.id || otherUser.id === user.id) return false;
+
+    const store = loadChatStore();
+    let chatId = chatIdFor(user.id, otherUser.id, context);
+    const now = new Date().toISOString();
+    const existingPairChat = Object.values(store.chats || {}).find((chat) => {
+      const ids = chat.participantIds || [];
+      return ids.length === 2 && ids.includes(user.id) && ids.includes(otherUser.id);
+    });
+    if (existingPairChat?.id) chatId = existingPairChat.id;
+    const existing = store.chats[chatId] || existingPairChat || {};
+    store.chats[chatId] = {
+      id: chatId,
+      participantIds: [user.id, otherUser.id],
+      participants: {
+        ...(existing.participants || {}),
+        [user.id]: publicUser(user),
+        [otherUser.id]: otherUser,
+      },
+      context: {
+        ...(existing.context || {}),
+        type: existing.context?.type || context.type || "analysis",
+        filmTitle: existing.context?.filmTitle || context.filmTitle || "",
+        characterName: existing.context?.characterName || context.characterName || "",
+        analysisKey: existing.context?.analysisKey || context.analysisKey || "",
+      },
+      createdAt: existing.createdAt || now,
+      updatedAt: now,
+      deletedFor: (existing.deletedFor || []).filter((id) => id !== user.id),
+      blockedBy: existing.blockedBy || [],
+      reportedMessages: existing.reportedMessages || [],
+      messages: existing.messages || [],
+    };
+    saveChatStore(store);
+    document.dispatchEvent(new CustomEvent("adlercode:chats-change"));
+    window.location.href = authRootPath(`nachrichten/index.html?chat=${encodeURIComponent(chatId)}`);
+    return true;
   }
 
   window.AdlercodeAuth = {
     currentUser,
     isLoggedIn: () => Boolean(currentUser()),
     open: openAuthDialog,
+    updateProfile: updateCurrentUser,
     requireAuth(message = "") {
       if (currentUser()) return true;
       if (message) {
@@ -228,6 +406,13 @@ if (siteHeader) {
       profileMenu.hidden = true;
       updateAuthUi();
     },
+  };
+
+  window.AdlercodeChat = {
+    storageKey: chatStorageKey,
+    load: loadChatStore,
+    save: saveChatStore,
+    startChat,
   };
 
   function setMobileMenu(open) {
@@ -265,7 +450,7 @@ if (siteHeader) {
   });
 
   document.addEventListener("click", (event) => {
-    const personalLink = event.target.closest('a[href*="meine-analysen"], a[href*="profil"]');
+    const personalLink = event.target.closest('a[href*="meine-analysen"], a[href*="profil"], a[href*="nachrichten"]');
     if (!personalLink || currentUser()) return;
     event.preventDefault();
     setMobileMenu(false);
@@ -302,7 +487,7 @@ if (siteHeader) {
     const formData = new FormData(form);
     const email = String(formData.get("email") || "").trim().toLowerCase();
     const password = String(formData.get("password") || "");
-    const users = readJson(authUsersKey, []);
+    const users = allUsers();
 
     if (mode === "login") {
       const user = users.find((item) => item.email === email && item.passwordHash === localPasswordHash(password));
@@ -310,7 +495,7 @@ if (siteHeader) {
         setAuthMessage("Diese lokalen Zugangsdaten wurden nicht gefunden.");
         return;
       }
-      loginUser({ id: user.id, name: user.name, email: user.email, createdAt: user.createdAt });
+      loginUser(user);
       return;
     }
 
@@ -319,19 +504,31 @@ if (siteHeader) {
         setAuthMessage("Für diese E-Mail gibt es bereits ein lokales Konto.");
         return;
       }
+      const username = String(formData.get("username") || "Adlercode Nutzer").trim();
       const user = {
         id: `local-${Date.now()}`,
-        name: String(formData.get("name") || "Adlercode Nutzer").trim(),
+        username,
         email,
         passwordHash: localPasswordHash(password),
+        avatarInitial: avatarInitial(username),
+        avatarUrl: "",
+        description: "",
+        privacy: "private",
         createdAt: new Date().toISOString(),
       };
-      writeJson(authUsersKey, [...users, user]);
-      loginUser({ id: user.id, name: user.name, email: user.email, createdAt: user.createdAt });
+      saveUsers([...users, user]);
+      loginUser(user);
       return;
     }
 
-    setAuthMessage("Passwort-Wiederherstellung ist für das spätere Backend vorbereitet.");
+    if (mode === "forgot") {
+      const user = users.find((item) => item.email === email);
+      if (!user) {
+        setAuthMessage("Für diese E-Mail wurde lokal kein Konto gefunden.");
+        return;
+      }
+      setAuthMessage("Passwort-Wiederherstellung ist für das spätere E-Mail-System vorbereitet.");
+    }
   });
 
   profileMenu.addEventListener("click", (event) => {
@@ -356,6 +553,8 @@ if (siteHeader) {
       closeSavePrompt();
     }
   });
+
+  document.addEventListener("adlercode:chats-change", renderHeaderNavigation);
 
   window.addEventListener("resize", () => {
     if (window.matchMedia("(min-width: 861px)").matches) {

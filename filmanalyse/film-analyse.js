@@ -9,6 +9,7 @@
   const tmdbImageBaseUrl = "https://image.tmdb.org/t/p/w342";
   const tmdbProfileBaseUrl = "https://image.tmdb.org/t/p/w185";
   const ratingStorageKey = "adlercode-film-ratings-v1";
+  const interactionStorageKey = "adlercode-public-analysis-interactions-v1";
   let ratingStore = loadRatingStore();
   let editingFilmRating = false;
   let editingCharacterRating = false;
@@ -281,12 +282,35 @@
     }
   }
 
+  function loadInteractionStore() {
+    try {
+      return JSON.parse(localStorage.getItem(interactionStorageKey) || "{}");
+    } catch {
+      return {};
+    }
+  }
+
+  function saveInteractionStore(store) {
+    localStorage.setItem(interactionStorageKey, JSON.stringify(store));
+  }
+
+  function interactionFor(key) {
+    const store = loadInteractionStore();
+    const entry = store[key] || {};
+    return {
+      helpfulBy: Array.isArray(entry.helpfulBy) ? entry.helpfulBy : [],
+      comments: Array.isArray(entry.comments) ? entry.comments : [],
+    };
+  }
+
   function filmRatingKey(film = activeFilm()) {
-    return film ? `film:${film.source || "local"}:${film.id}` : "";
+    const userId = window.AdlercodeAuth?.currentUser?.()?.id || "guest";
+    return film ? `film:${userId}:${film.source || "local"}:${film.id}` : "";
   }
 
   function characterRatingKey(film = activeFilm(), characterItem = activeCharacter()) {
-    return film && characterItem ? `character:${film.source || "local"}:${film.id}:${characterItem.id}` : "";
+    const userId = window.AdlercodeAuth?.currentUser?.()?.id || "guest";
+    return film && characterItem ? `character:${userId}:${film.source || "local"}:${film.id}:${characterItem.id}` : "";
   }
 
   function filmRatings(film = activeFilm()) {
@@ -324,6 +348,10 @@
     return form.querySelector("textarea")?.value.trim() || "";
   }
 
+  function collectVisibility(form) {
+    return form.querySelector("[data-rating-visibility]:checked")?.value === "public" ? "public" : "private";
+  }
+
   function dominantLabel(values) {
     return Object.entries(values || {}).reduce((dominant, item) => (item[1] > dominant[1] ? item : dominant), ["", -1])[0];
   }
@@ -344,6 +372,20 @@
       psychopath: "Psychopath",
       covert: "Covert",
     }[value] || value;
+  }
+
+  function formatDate(value) {
+    if (!value) return "Nicht gespeichert";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "Nicht gespeichert";
+    return date.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+  }
+
+  function latestRatingDate(item) {
+    return [item?.savedAt, item?.moral?.savedAt, item?.["film-narrative"]?.savedAt, item?.["film-system"]?.savedAt]
+      .filter(Boolean)
+      .sort()
+      .at(-1) || "";
   }
 
   function renderDistributionList(values) {
@@ -373,6 +415,36 @@
         imageUrl: characterItem.imageUrl || "",
       }
       : null;
+  }
+
+  function currentAuthor(user = window.AdlercodeAuth?.currentUser?.()) {
+    return user
+      ? {
+        id: user.id,
+        username: user.username || user.name || "Adlercode Nutzer",
+        avatarInitial: user.avatarInitial || "A",
+      }
+      : null;
+  }
+
+  function isPublicAnalysis(item) {
+    return item?.visibility === "public" || item?.["film-narrative"]?.visibility === "public" || item?.moral?.visibility === "public" || item?.["film-system"]?.visibility === "public";
+  }
+
+  function publicAnalysesForFilm(film = activeFilm()) {
+    if (!film) return [];
+    return Object.entries(ratingStore)
+      .filter(([key, item]) => key.startsWith("film:") && isPublicAnalysis(item) && item?.meta?.id === film.id && item?.meta?.source === (film.source || "local"))
+      .map(([key, item]) => ({ key, item }))
+      .sort((a, b) => latestRatingDate(b.item).localeCompare(latestRatingDate(a.item)));
+  }
+
+  function publicAnalysesForCharacter(film = activeFilm(), characterItem = activeCharacter()) {
+    if (!film || !characterItem) return [];
+    return Object.entries(ratingStore)
+      .filter(([key, item]) => key.startsWith("character:") && isPublicAnalysis(item) && item?.meta?.id === film.id && item?.meta?.source === (film.source || "local") && item?.meta?.characterId === characterItem.id)
+      .map(([key, item]) => ({ key, item }))
+      .sort((a, b) => latestRatingDate(b.item).localeCompare(latestRatingDate(a.item)));
   }
 
   function openFromUrl() {
@@ -717,6 +789,7 @@
           ${renderMoralSection(ratings.moral)}
           ${renderRatingSection("Systemanalyse", "film-system", ["Adlersystem", "Schlangensystem", "Psychopath-System", "Covertsystem"], "Warum hast du diese Systemanalyse vergeben?", "", ratings["film-system"])}
         `}
+        ${renderPublicAnalysesPreview("film")}
       </section>
     `;
   }
@@ -755,6 +828,7 @@
         ${characterRating(film, characterItem) && !editingCharacterRating
           ? renderCharacterResult(characterRating(film, characterItem))
           : renderRatingSection("NPC-Programmanalyse", "character-program", ["Empath", "Narzisst", "Psychopath", "Covert"], "Warum hast du diese Bewertung vergeben?", "", characterRating(film, characterItem))}
+        ${renderPublicAnalysesPreview("character")}
       </article>
     `;
   }
@@ -784,8 +858,13 @@
           <span>Begründung</span>
           <textarea rows="4" placeholder="${escapeHtml(reasonPlaceholder)}">${escapeHtml(savedRating?.reason || "")}</textarea>
         </label>
+        <fieldset class="film-rating-visibility">
+          <legend>Sichtbarkeit</legend>
+          <label><input type="radio" name="${escapeHtml(type)}-visibility" value="private" data-rating-visibility ${savedRating?.visibility !== "public" ? "checked" : ""} /> Privat speichern</label>
+          <label><input type="radio" name="${escapeHtml(type)}-visibility" value="public" data-rating-visibility ${savedRating?.visibility === "public" ? "checked" : ""} /> Öffentlich veröffentlichen</label>
+        </fieldset>
         <button type="button" class="film-rating-save" disabled data-rating-save>Bewertung speichern</button>
-        <div class="film-rating-future" aria-hidden="true" data-community-rating-ready="false"></div>
+        <div class="film-community-placeholder" data-community-rating-ready="false">Community-Durchschnitt wird vorbereitet.</div>
       </form>
     `;
   }
@@ -795,6 +874,7 @@
     return `
       <section class="film-rating-result" data-character-result>
         <p>Deine Charakteranalyse</p>
+        <span class="film-result-visibility">${result.visibility === "public" ? "Öffentlich" : "Privat"}</span>
         ${renderDistributionList(result.values)}
         <strong>Dominantes Profil: ${escapeHtml(profileLabel(dominant))}</strong>
         ${result.reason ? `<blockquote>${escapeHtml(result.reason)}</blockquote>` : ""}
@@ -812,6 +892,7 @@
     return `
       <section class="film-rating-result film-analysis-result" data-film-result>
         <p>Deine Filmanalyse</p>
+        <span class="film-result-visibility">${ratings.visibility === "public" ? "Öffentlich" : "Privat"}</span>
         ${hasNarrative ? `
           <article>
             <h4>Narrativanalyse</h4>
@@ -864,8 +945,116 @@
             ${index < levels.length - 1 ? '<span class="film-moral-arrow" aria-hidden="true">↓</span>' : ""}
           `).join("")}
         </div>
+        <fieldset class="film-rating-visibility">
+          <legend>Sichtbarkeit</legend>
+          <label><input type="radio" name="film-moral-visibility" value="private" data-rating-visibility ${savedMoral?.visibility !== "public" ? "checked" : ""} /> Privat speichern</label>
+          <label><input type="radio" name="film-moral-visibility" value="public" data-rating-visibility ${savedMoral?.visibility === "public" ? "checked" : ""} /> Öffentlich veröffentlichen</label>
+        </fieldset>
         <button type="button" class="film-rating-save" disabled data-moral-save>Einordnung speichern</button>
+        <div class="film-community-placeholder" data-community-rating-ready="false">Community-Durchschnitt wird vorbereitet.</div>
       </form>
+    `;
+  }
+
+  function renderPublicAnalysesPreview(scope = "film") {
+    const analyses = scope === "character" ? publicAnalysesForCharacter() : publicAnalysesForFilm();
+    const emptyText = scope === "character"
+      ? "Noch keine öffentlichen Charakteranalysen vorhanden."
+      : "Noch keine öffentlichen Filmanalysen vorhanden.";
+    const buttonText = analyses.length ? "Eigene Analyse veröffentlichen" : "Analyse veröffentlichen";
+    return `
+      <section class="film-community-section" data-community-scope="${escapeHtml(scope)}" data-comments-ready="false" data-helpful-ready="false" data-experts-ready="false" data-ranking-ready="false">
+        <header>
+          <h3>Community</h3>
+          <small>Community-Durchschnitt wird vorbereitet.</small>
+        </header>
+        ${analyses.length
+          ? `<div class="film-community-list">${analyses.map(({ key, item }) => renderCommunityAnalysis(item, scope, key)).join("")}</div>`
+          : `
+            <div class="film-community-empty">
+              <p>${emptyText}</p>
+              <p>Sei der Erste und veröffentliche deine Analyse.</p>
+            </div>
+          `}
+        <button type="button" class="film-community-publish" data-community-publish>${buttonText}</button>
+      </section>
+    `;
+  }
+
+  function renderCommunityAnalysis(item, scope, key = "") {
+    const meta = item.meta || {};
+    const authorData = item.author || {};
+    const author = authorData.username || "Adlercode Nutzer";
+    const currentUserId = window.AdlercodeAuth?.currentUser?.()?.id || "";
+    const canMessage = authorData.id && authorData.id !== currentUserId;
+    const reasons = [item?.["film-narrative"]?.reason, item?.["film-system"]?.reason, item?.reason].filter(Boolean);
+    const interaction = interactionFor(key);
+    const currentUser = window.AdlercodeAuth?.currentUser?.();
+    const helpfulActive = currentUser?.id && interaction.helpfulBy.includes(currentUser.id);
+    return `
+      <article class="film-community-analysis" data-public-analysis-key="${escapeHtml(key)}">
+        <header>
+          <strong>${escapeHtml(author)}</strong>
+          <span>${escapeHtml(formatDate(latestRatingDate(item)))}</span>
+        </header>
+        <dl>
+          <div><dt>Film</dt><dd>${escapeHtml(meta.title || "Unbekannter Film")}</dd></div>
+          ${scope === "character" ? `<div><dt>Charakter</dt><dd>${escapeHtml(meta.characterName || "Unbekannte Rolle")}</dd></div>` : ""}
+          ${item["film-narrative"] ? `<div><dt>Narrativanalyse</dt><dd>${escapeHtml(dominantLabel(item["film-narrative"].values) || "Nicht gespeichert")}</dd></div>` : ""}
+          ${item.moral ? `<div><dt>Moralanalyse</dt><dd>${escapeHtml(moralLabel(item.moral.level))}</dd></div>` : ""}
+          ${item["film-system"] ? `<div><dt>Systemanalyse</dt><dd>${escapeHtml(dominantLabel(item["film-system"].values) || "Nicht gespeichert")}</dd></div>` : ""}
+          ${item.values ? `<div><dt>Charakteranalyse</dt><dd>${escapeHtml(profileLabel(dominantLabel(item.values)))}</dd></div>` : ""}
+        </dl>
+        ${reasons.length ? `<blockquote>${reasons.map(escapeHtml).join("<br />")}</blockquote>` : ""}
+        ${canMessage ? `
+          <button
+            type="button"
+            class="film-community-message"
+            data-message-author-id="${escapeHtml(authorData.id)}"
+            data-message-author-name="${escapeHtml(author)}"
+            data-message-author-avatar="${escapeHtml(authorData.avatarInitial || "")}"
+            data-message-analysis-key="${escapeHtml(key)}"
+            data-message-film="${escapeHtml(meta.title || "")}"
+            data-message-character="${escapeHtml(meta.characterName || meta.character || "")}"
+            data-message-scope="${escapeHtml(scope)}"
+          >Nachricht senden</button>
+        ` : ""}
+        ${renderPublicInteraction(key, interaction, helpfulActive)}
+      </article>
+    `;
+  }
+
+  function renderPublicInteraction(key, interaction, helpfulActive = false) {
+    return `
+      <section class="public-analysis-interaction" aria-label="Interaktion zur öffentlichen Analyse">
+        <div class="public-helpful-row">
+          <button type="button" class="${helpfulActive ? "is-active" : ""}" data-helpful-analysis="${escapeHtml(key)}">Hilfreich</button>
+          <span>${interaction.helpfulBy.length} fanden diese Analyse hilfreich</span>
+        </div>
+        <div class="public-comments">
+          ${interaction.comments.length
+            ? interaction.comments.map((comment) => renderPublicComment(comment, key)).join("")
+            : `<p class="public-comments-empty">Noch keine Kommentare.</p>`}
+        </div>
+        <form class="public-comment-form" data-comment-form="${escapeHtml(key)}">
+          <input type="text" name="comment" placeholder="Kommentar schreiben ..." />
+          <button type="submit">Kommentieren</button>
+        </form>
+      </section>
+    `;
+  }
+
+  function renderPublicComment(comment, key) {
+    const currentUserId = window.AdlercodeAuth?.currentUser?.()?.id || "";
+    return `
+      <article class="public-comment">
+        <header>
+          <strong>${escapeHtml(comment.username || "Adlercode Nutzer")}</strong>
+          <span>${escapeHtml(formatDate(comment.createdAt))}</span>
+        </header>
+        <p>${escapeHtml(comment.text || "")}</p>
+        ${comment.userId === currentUserId ? `<button type="button" data-delete-comment="${escapeHtml(comment.id)}" data-comment-analysis="${escapeHtml(key)}">Löschen</button>` : ""}
+      </article>
     `;
   }
 
@@ -972,27 +1161,97 @@
       return;
     }
 
+    const helpfulButton = event.target.closest("[data-helpful-analysis]");
+    if (helpfulButton) {
+      if (window.AdlercodeAuth && !window.AdlercodeAuth.requireAuth("Bitte melde dich an oder registriere dich, um eine Analyse als hilfreich zu markieren.")) return;
+      const user = window.AdlercodeAuth?.currentUser?.();
+      const key = helpfulButton.dataset.helpfulAnalysis || "";
+      if (!user || !key) return;
+      const store = loadInteractionStore();
+      const entry = store[key] || { helpfulBy: [], comments: [] };
+      const helpfulBy = new Set(Array.isArray(entry.helpfulBy) ? entry.helpfulBy : []);
+      if (helpfulBy.has(user.id)) helpfulBy.delete(user.id);
+      else helpfulBy.add(user.id);
+      store[key] = { ...entry, helpfulBy: [...helpfulBy], comments: Array.isArray(entry.comments) ? entry.comments : [] };
+      saveInteractionStore(store);
+      render();
+      return;
+    }
+
+    const deleteCommentButton = event.target.closest("[data-delete-comment]");
+    if (deleteCommentButton) {
+      const user = window.AdlercodeAuth?.currentUser?.();
+      const key = deleteCommentButton.dataset.commentAnalysis || "";
+      const commentId = deleteCommentButton.dataset.deleteComment || "";
+      if (!user || !key || !commentId) return;
+      const store = loadInteractionStore();
+      const entry = store[key] || { helpfulBy: [], comments: [] };
+      store[key] = {
+        ...entry,
+        helpfulBy: Array.isArray(entry.helpfulBy) ? entry.helpfulBy : [],
+        comments: (entry.comments || []).filter((comment) => comment.id !== commentId || comment.userId !== user.id),
+      };
+      saveInteractionStore(store);
+      render();
+      return;
+    }
+
+    const messageButton = event.target.closest("[data-message-author-id]");
+    if (messageButton) {
+      window.AdlercodeChat?.startChat?.(
+        {
+          id: messageButton.dataset.messageAuthorId,
+          username: messageButton.dataset.messageAuthorName,
+          avatarInitial: messageButton.dataset.messageAuthorAvatar,
+        },
+        {
+          type: messageButton.dataset.messageScope === "character" ? "character-analysis" : "film-analysis",
+          analysisKey: messageButton.dataset.messageAnalysisKey,
+          filmTitle: messageButton.dataset.messageFilm,
+          characterName: messageButton.dataset.messageCharacter,
+        }
+      );
+      return;
+    }
+
+    const communityPublish = event.target.closest("[data-community-publish]");
+    if (communityPublish) {
+      if (window.AdlercodeAuth && !window.AdlercodeAuth.requireAuth()) return;
+      if (activeView === "character") {
+        editingCharacterRating = true;
+      } else {
+        activeTab = "analysis";
+        editingFilmRating = true;
+      }
+      render();
+      return;
+    }
+
     const ratingSave = event.target.closest("[data-rating-save]");
     if (ratingSave) {
       const form = ratingSave.closest("[data-rating-type]");
       if (!form || ratingSave.disabled) return;
       if (window.AdlercodeAuth && !window.AdlercodeAuth.requireAuth()) return;
+      const user = window.AdlercodeAuth?.currentUser?.();
+      if (!user) return;
       const type = form.dataset.ratingType;
       const payload = {
         values: collectDistribution(form),
         reason: collectReason(form),
+        visibility: collectVisibility(form),
         savedAt: new Date().toISOString(),
       };
+      const author = currentAuthor(user);
 
       if (type === "character-program") {
         const key = characterRatingKey();
         if (!key) return;
-        ratingStore[key] = { ...payload, meta: characterMeta() };
+        ratingStore[key] = { ...payload, ownerId: user.id, author, visibility: payload.visibility, meta: characterMeta() };
         editingCharacterRating = false;
       } else {
         const key = filmRatingKey();
         if (!key) return;
-        ratingStore[key] = { ...filmRatings(), meta: filmMeta(), [type]: payload };
+        ratingStore[key] = { ...filmRatings(), ownerId: user.id, author, visibility: payload.visibility, meta: filmMeta(), [type]: payload };
         editingFilmRating = false;
       }
 
@@ -1007,13 +1266,19 @@
       const selected = form?.querySelector("[data-moral-level]:checked");
       if (!form || !selected || moralSave.disabled) return;
       if (window.AdlercodeAuth && !window.AdlercodeAuth.requireAuth()) return;
+      const user = window.AdlercodeAuth?.currentUser?.();
+      if (!user) return;
       const key = filmRatingKey();
       if (!key) return;
       ratingStore[key] = {
         ...filmRatings(),
+        ownerId: user.id,
+        author: currentAuthor(user),
+        visibility: collectVisibility(form),
         meta: filmMeta(),
         moral: {
           level: selected.value,
+          visibility: collectVisibility(form),
           savedAt: new Date().toISOString(),
         },
       };
@@ -1059,6 +1324,37 @@
       editingCharacterRating = false;
       render();
     }
+  });
+
+  detailRoot?.addEventListener("submit", (event) => {
+    const form = event.target.closest("[data-comment-form]");
+    if (!form) return;
+    event.preventDefault();
+    if (window.AdlercodeAuth && !window.AdlercodeAuth.requireAuth("Bitte melde dich an oder registriere dich, um zu kommentieren.")) return;
+    const user = window.AdlercodeAuth?.currentUser?.();
+    const key = form.dataset.commentForm || "";
+    const input = form.elements.comment;
+    const text = String(input?.value || "").trim();
+    if (!user || !key || !text) return;
+    const store = loadInteractionStore();
+    const entry = store[key] || { helpfulBy: [], comments: [] };
+    store[key] = {
+      ...entry,
+      helpfulBy: Array.isArray(entry.helpfulBy) ? entry.helpfulBy : [],
+      comments: [
+        ...(Array.isArray(entry.comments) ? entry.comments : []),
+        {
+          id: `comment-${Date.now()}`,
+          userId: user.id,
+          username: user.username || user.name || "Adlercode Nutzer",
+          text,
+          createdAt: new Date().toISOString(),
+        },
+      ],
+    };
+    saveInteractionStore(store);
+    form.reset();
+    render();
   });
 
   document.addEventListener("click", (event) => {

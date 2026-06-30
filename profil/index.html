@@ -33,11 +33,16 @@
                 <dd data-profile-name>Adlercode Nutzer</dd>
               </div>
               <div>
+                <dt>E-Mail</dt>
+                <dd data-profile-email>Gastmodus</dd>
+              </div>
+              <div>
                 <dt>Mitglied seit</dt>
                 <dd data-profile-member-since>2026</dd>
               </div>
             </dl>
             <p class="profile-description" data-profile-description>Persönliches Zentrum für Analysen, Einstellungen und zukünftige Community-Funktionen.</p>
+            <button type="button" class="profile-message-button" data-profile-message hidden>Nachricht senden</button>
           </div>
         </header>
 
@@ -75,7 +80,29 @@
         <section class="profile-section" id="einstellungen" aria-labelledby="profile-settings-title">
           <h2 id="profile-settings-title">Einstellungen</h2>
           <button type="button" class="profile-edit-button" data-profile-edit>Profil bearbeiten</button>
-          <p class="profile-hint">Profilbild, Benutzername, Beschreibung und Privatsphäre können später hier geändert werden.</p>
+          <form class="profile-edit-form" data-profile-edit-form hidden>
+            <label>
+              Benutzername
+              <input type="text" name="username" autocomplete="username" required />
+            </label>
+            <label>
+              Kurzbeschreibung
+              <textarea name="description" rows="3" maxlength="180" placeholder="Kurz beschreiben, worum es in deinem Adlercode-Profil geht."></textarea>
+            </label>
+            <label>
+              Sichtbarkeit
+              <select name="privacy">
+                <option value="private">Privat</option>
+                <option value="public">Öffentlich vorbereitet</option>
+              </select>
+            </label>
+            <div class="profile-edit-actions">
+              <button type="submit">Speichern</button>
+              <button type="button" data-profile-edit-cancel>Abbrechen</button>
+            </div>
+            <p class="profile-edit-message" data-profile-edit-message aria-live="polite"></p>
+          </form>
+          <p class="profile-hint">Profilbild-Platzhalter, Benutzername, Beschreibung und Privatsphäre sind lokal vorbereitet.</p>
         </section>
 
         <section class="profile-section" aria-labelledby="profile-public-title">
@@ -84,6 +111,7 @@
             <p>Du hast noch keine öffentlichen Analysen veröffentlicht.</p>
             <button type="button" class="profile-secondary-button">Analyse veröffentlichen</button>
           </div>
+          <div class="profile-public-list" data-profile-public-list hidden></div>
         </section>
       </section>
     </main>
