@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1305" role="img" aria-labelledby="title desc">
+  <title id="title">Adlercode Einführung und Leseprobe</title>
+  <desc id="desc">Schwarzes Adlercode PDF-Cover mit goldenen Akzenten.</desc>
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f2d083"/>
+      <stop offset="0.5" stop-color="#c8a45b"/>
+      <stop offset="1" stop-color="#8d6a2d"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="18%" r="60%">
+      <stop offset="0" stop-color="#c8a45b" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#c8a45b" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="900" height="1305" fill="#050607"/>
+  <rect width="900" height="1305" fill="url(#glow)"/>
+  <rect x="52" y="52" width="796" height="1201" rx="24" fill="none" stroke="#c8a45b" stroke-opacity="0.55" stroke-width="4"/>
+  <rect x="88" y="88" width="724" height="1129" rx="18" fill="none" stroke="#f2d083" stroke-opacity="0.15" stroke-width="2"/>
+  <g transform="translate(330 130)">
+    <rect x="0" y="0" width="240" height="240" rx="34" fill="url(#gold)"/>
+    <path d="M120 38 202 120 120 202 38 120Z" fill="#070807" opacity="0.92"/>
+    <path d="M76 120 117 75 128 104 166 83 144 128 170 158 125 145 100 181 98 139Z" fill="url(#gold)"/>
+  </g>
+  <text x="450" y="455" text-anchor="middle" fill="#f4f1ea" font-family="Inter, Arial, sans-serif" font-size="82" font-weight="800" letter-spacing="7">ADLERCODE</text>
+  <text x="450" y="532" text-anchor="middle" fill="#c8a45b" font-family="Inter, Arial, sans-serif" font-size="40" font-weight="700" letter-spacing="2">Einführung &amp; Leseprobe</text>
+  <g transform="translate(310 650)">
+    <rect x="0" y="0" width="280" height="340" rx="20" fill="#111318" stroke="#c8a45b" stroke-opacity="0.65" stroke-width="3"/>
+    <path d="M205 0v78h75" fill="none" stroke="#c8a45b" stroke-width="3"/>
+    <text x="140" y="185" text-anchor="middle" fill="#f4f1ea" font-family="Inter, Arial, sans-serif" font-size="68" font-weight="900">PDF</text>
+    <line x1="70" y1="230" x2="210" y2="230" stroke="#c8a45b" stroke-opacity="0.7" stroke-width="4"/>
+    <line x1="90" y1="260" x2="190" y2="260" stroke="#c8a45b" stroke-opacity="0.36" stroke-width="4"/>
+  </g>
+  <g transform="translate(295 1080)">
+    <rect x="0" y="0" width="310" height="66" rx="33" fill="url(#gold)"/>
+    <text x="155" y="43" text-anchor="middle" fill="#060707" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="900" letter-spacing="1">KOSTENLOS</text>
+  </g>
+</svg>

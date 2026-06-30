@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Profil | Adlercode</title>
+    <meta name="description" content="Persönliches Adlercode-Profil mit Analyseübersicht und Einstellungen." />
+    <link rel="stylesheet" href="../adlercode.css" />
+    <link rel="icon" type="image/png" sizes="32x32" href="../assets/favicons/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="../assets/favicons/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="../assets/favicons/apple-touch-icon.png" />
+    <link rel="manifest" href="../site.webmanifest" />
+  </head>
+  <body>
+    <header class="site-header" aria-label="Adlercode Navigation">
+      <a class="brand" href="../index.html" aria-label="Adlercode Startseite">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>Adlercode</span>
+      </a>
+      <nav class="site-nav" aria-label="Hauptnavigation"></nav>
+    </header>
+
+    <main class="library-page-shell profile-shell">
+      <section class="library-page profile-page" aria-labelledby="profile-title" data-profile-page>
+        <header class="profile-hero">
+          <div class="profile-avatar" aria-hidden="true">A</div>
+          <div>
+            <p class="eyebrow">Profil</p>
+            <h1 id="profile-title">Adlercode Profil</h1>
+            <dl class="profile-meta">
+              <div>
+                <dt>Benutzername</dt>
+                <dd data-profile-name>Adlercode Nutzer</dd>
+              </div>
+              <div>
+                <dt>Mitglied seit</dt>
+                <dd data-profile-member-since>2026</dd>
+              </div>
+            </dl>
+            <p class="profile-description" data-profile-description>Persönliches Zentrum für Analysen, Einstellungen und zukünftige Community-Funktionen.</p>
+          </div>
+        </header>
+
+        <section class="profile-section" aria-labelledby="profile-stats-title">
+          <h2 id="profile-stats-title">Statistiken</h2>
+          <div class="profile-stats-grid">
+            <article>
+              <span data-stat-films>0</span>
+              <p>Filmanalysen</p>
+            </article>
+            <article>
+              <span data-stat-characters>0</span>
+              <p>Charakteranalysen</p>
+            </article>
+            <article>
+              <span data-stat-public>0</span>
+              <p>Öffentliche Analysen</p>
+            </article>
+            <article>
+              <span data-stat-private>0</span>
+              <p>Private Analysen</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="profile-section" aria-labelledby="profile-analyses-title">
+          <h2 id="profile-analyses-title">Meine Analysen</h2>
+          <div class="profile-action-row">
+            <a href="../meine-analysen/">Filmanalysen</a>
+            <a href="../meine-analysen/?tab=characters">Charakteranalysen</a>
+          </div>
+          <div class="profile-recent-analyses" data-profile-recent hidden></div>
+        </section>
+
+        <section class="profile-section" id="einstellungen" aria-labelledby="profile-settings-title">
+          <h2 id="profile-settings-title">Einstellungen</h2>
+          <button type="button" class="profile-edit-button" data-profile-edit>Profil bearbeiten</button>
+          <p class="profile-hint">Profilbild, Benutzername, Beschreibung und Privatsphäre können später hier geändert werden.</p>
+        </section>
+
+        <section class="profile-section" aria-labelledby="profile-public-title">
+          <h2 id="profile-public-title">Öffentliche Analysen</h2>
+          <div class="profile-empty-public">
+            <p>Du hast noch keine öffentlichen Analysen veröffentlicht.</p>
+            <button type="button" class="profile-secondary-button">Analyse veröffentlichen</button>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <footer class="site-footer" aria-label="Footer">
+      <div class="footer-contact">
+        <nav class="footer-links" aria-label="Footer Navigation">
+          <a href="../datenschutz/">Datenschutz</a>
+          <a href="../impressum/">Impressum</a>
+          <a href="../kontakt.html">Kontakt</a>
+        </nav>
+        <a class="contact-link" href="mailto:info@adlercode.com">info@adlercode.com</a>
+      </div>
+    </footer>
+
+    <script src="../adlercode-terms.js?v=terms"></script>
+    <script src="../adlercode.js?v=main-structure"></script>
+    <script src="./profil.js?v=profile-draft"></script>
+  </body>
+</html>

@@ -8,15 +8,121 @@ if (siteHeader) {
   const indexUrl = new URL(brandLink?.getAttribute("href") || "index.html", window.location.href);
   const siteRoot = indexUrl.href.replace(/(?:index\.html)?(?:#.*)?$/, "");
   const navItems = [
-    ["Home", "index.html"],
-    ["B\u00fccher", "index.html#book"],
-    ["Vision", "index.html#vision"],
-    ["Adlercode App", "index.html#app"],
+    ["Start", "index.html"],
+    ["Musterbibliothek", "musterbibliothek/index.html"],
+    ["Bücher", "buecher/index.html"],
+    ["Filmanalyse", "filmanalyse/index.html"],
+    ["Meine Analysen", "meine-analysen/index.html"],
+    ["Adler-Kodex", "adler-kodex/index.html"],
     ["FAQ", "faq/index.html"],
     ["Kontakt", "kontakt.html"],
-    ["Impressum", "impressum/index.html"],
-    ["Datenschutz", "datenschutz/index.html"],
   ];
+  const authStorageKey = "adlercode-auth-v1";
+  const authUsersKey = "adlercode-auth-users-v1";
+
+  function readJson(key, fallback) {
+    try {
+      return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));
+    } catch {
+      return fallback;
+    }
+  }
+
+  function writeJson(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+  }
+
+  function currentUser() {
+    return readJson(authStorageKey, null);
+  }
+
+  function authRootPath(path) {
+    return new URL(path, siteRoot).href;
+  }
+
+  function localPasswordHash(value) {
+    let hash = 5381;
+    for (const char of String(value)) {
+      hash = (hash * 33) ^ char.charCodeAt(0);
+    }
+    return String(hash >>> 0);
+  }
+
+  const authButton = document.createElement("button");
+  authButton.className = "auth-header-button";
+  authButton.type = "button";
+
+  const guestStatus = document.createElement("span");
+  guestStatus.className = "guest-status";
+  guestStatus.textContent = "Gastmodus";
+  guestStatus.setAttribute("aria-label", "Status: Gastmodus");
+
+  const profileMenu = document.createElement("div");
+  profileMenu.className = "profile-menu";
+  profileMenu.hidden = true;
+  profileMenu.innerHTML = `
+    <a href="${authRootPath("profil/index.html")}">Profil</a>
+    <a href="${authRootPath("meine-analysen/index.html")}">Meine Analysen</a>
+    <a href="${authRootPath("profil/index.html#einstellungen")}">Einstellungen</a>
+    <button type="button" data-auth-logout>Abmelden</button>
+  `;
+
+  const authDialog = document.createElement("div");
+  authDialog.className = "auth-dialog";
+  authDialog.hidden = true;
+  authDialog.setAttribute("role", "dialog");
+  authDialog.setAttribute("aria-modal", "true");
+  authDialog.setAttribute("aria-labelledby", "auth-dialog-title");
+  authDialog.innerHTML = `
+    <div class="auth-dialog-backdrop" data-auth-close></div>
+    <section class="auth-dialog-panel">
+      <button type="button" class="auth-dialog-close" data-auth-close aria-label="Anmeldung schließen">×</button>
+      <p class="eyebrow">Benutzerkonto</p>
+      <h2 id="auth-dialog-title">Adlercode Konto</h2>
+      <div class="auth-tabs" role="tablist" aria-label="Konto">
+        <button type="button" data-auth-tab="login" class="is-selected">Anmelden</button>
+        <button type="button" data-auth-tab="register">Registrieren</button>
+        <button type="button" data-auth-tab="forgot">Passwort vergessen</button>
+      </div>
+      <form class="auth-form is-active" data-auth-panel="login">
+        <label>E-Mail<input type="email" name="email" autocomplete="email" required /></label>
+        <label>Passwort<input type="password" name="password" autocomplete="current-password" required /></label>
+        <button type="submit">Anmelden</button>
+      </form>
+      <form class="auth-form" data-auth-panel="register">
+        <label>Benutzername<input type="text" name="name" autocomplete="name" required /></label>
+        <label>E-Mail<input type="email" name="email" autocomplete="email" required /></label>
+        <label>Passwort<input type="password" name="password" autocomplete="new-password" required minlength="6" /></label>
+        <button type="submit">Registrieren</button>
+      </form>
+      <form class="auth-form" data-auth-panel="forgot">
+        <label>E-Mail<input type="email" name="email" autocomplete="email" required /></label>
+        <button type="submit">Link vorbereiten</button>
+      </form>
+      <p class="auth-message" data-auth-message aria-live="polite"></p>
+    </section>
+  `;
+
+  const savePromptDialog = document.createElement("div");
+  savePromptDialog.className = "auth-dialog save-prompt-dialog";
+  savePromptDialog.hidden = true;
+  savePromptDialog.setAttribute("role", "dialog");
+  savePromptDialog.setAttribute("aria-modal", "true");
+  savePromptDialog.setAttribute("aria-labelledby", "save-prompt-title");
+  savePromptDialog.innerHTML = `
+    <div class="auth-dialog-backdrop" data-save-prompt-close></div>
+    <section class="auth-dialog-panel save-prompt-panel">
+      <button type="button" class="auth-dialog-close" data-save-prompt-close aria-label="Dialog schließen">×</button>
+      <p class="eyebrow">Gastmodus</p>
+      <h2 id="save-prompt-title">Analyse speichern</h2>
+      <p>Um deine Analyse dauerhaft zu speichern und später wieder aufzurufen, benötigst du ein kostenloses Benutzerkonto.</p>
+      <div class="save-prompt-actions">
+        <button type="button" data-save-prompt-login>Anmelden</button>
+        <button type="button" data-save-prompt-register>Registrieren</button>
+        <button type="button" class="save-prompt-ghost" data-save-prompt-close>Weiter als Gast</button>
+      </div>
+    </section>
+  `;
 
   const mobileToggle = document.createElement("button");
   mobileToggle.className = "mobile-nav-toggle";
@@ -34,11 +140,95 @@ if (siteHeader) {
   mobilePanel.className = "mobile-nav-panel";
   mobilePanel.id = "mobile-nav-panel";
   mobilePanel.setAttribute("aria-label", "Mobile Navigation");
-  mobilePanel.innerHTML = navItems
-    .map(([label, path]) => `<a href="${new URL(path, siteRoot).href}">${label}</a>`)
-    .join("");
+  mobilePanel.innerHTML = `
+    <p>NAVIGATION</p>
+    ${navItems.map(([label, path]) => `<a href="${new URL(path, siteRoot).href}">${label}</a>`).join("")}
+    <button type="button" data-auth-open>Anmelden</button>
+  `;
 
-  siteHeader.append(mobileToggle, mobilePanel);
+  siteHeader.prepend(mobileToggle);
+  siteHeader.append(guestStatus, authButton, profileMenu, mobilePanel, authDialog, savePromptDialog);
+
+  function setAuthTab(name) {
+    authDialog.querySelectorAll("[data-auth-tab]").forEach((button) => {
+      button.classList.toggle("is-selected", button.dataset.authTab === name);
+    });
+    authDialog.querySelectorAll("[data-auth-panel]").forEach((panel) => {
+      panel.classList.toggle("is-active", panel.dataset.authPanel === name);
+    });
+    setAuthMessage("");
+  }
+
+  function setAuthMessage(message) {
+    const messageRoot = authDialog.querySelector("[data-auth-message]");
+    if (messageRoot) messageRoot.textContent = message;
+  }
+
+  function updateAuthUi() {
+    const user = currentUser();
+    authButton.textContent = user ? "Profil" : "Anmelden";
+    authButton.setAttribute("aria-expanded", "false");
+    mobilePanel.querySelector("[data-auth-open]").textContent = user ? "Profil" : "Anmelden";
+    guestStatus.hidden = Boolean(user);
+    document.dispatchEvent(new CustomEvent("adlercode:auth-change", { detail: { user } }));
+  }
+
+  function openSavePrompt() {
+    profileMenu.hidden = true;
+    savePromptDialog.hidden = false;
+    document.body.classList.add("is-auth-dialog-open");
+  }
+
+  function closeSavePrompt() {
+    savePromptDialog.hidden = true;
+    document.body.classList.remove("is-auth-dialog-open");
+  }
+
+  function openAuthDialog(mode = "login", message = "") {
+    profileMenu.hidden = true;
+    authDialog.hidden = false;
+    document.body.classList.add("is-auth-dialog-open");
+    setAuthTab(mode);
+    setAuthMessage(message);
+    authDialog.querySelector("[data-auth-panel].is-active input")?.focus();
+  }
+
+  function closeAuthDialog() {
+    authDialog.hidden = true;
+    document.body.classList.remove("is-auth-dialog-open");
+  }
+
+  function toggleProfileMenu() {
+    const open = profileMenu.hidden;
+    profileMenu.hidden = !open;
+    authButton.setAttribute("aria-expanded", String(open));
+  }
+
+  function loginUser(user) {
+    writeJson(authStorageKey, user);
+    closeAuthDialog();
+    updateAuthUi();
+  }
+
+  window.AdlercodeAuth = {
+    currentUser,
+    isLoggedIn: () => Boolean(currentUser()),
+    open: openAuthDialog,
+    requireAuth(message = "") {
+      if (currentUser()) return true;
+      if (message) {
+        openAuthDialog("login", message);
+      } else {
+        openSavePrompt();
+      }
+      return false;
+    },
+    logout() {
+      localStorage.removeItem(authStorageKey);
+      profileMenu.hidden = true;
+      updateAuthUi();
+    },
+  };
 
   function setMobileMenu(open) {
     siteHeader.classList.toggle("is-mobile-nav-open", open);
@@ -50,21 +240,120 @@ if (siteHeader) {
     setMobileMenu(!siteHeader.classList.contains("is-mobile-nav-open"));
   });
 
+  authButton.addEventListener("click", () => {
+    if (currentUser()) {
+      toggleProfileMenu();
+    } else {
+      openAuthDialog("login");
+    }
+  });
+
   mobilePanel.addEventListener("click", (event) => {
-    if (event.target.closest("a")) {
+    const authOpen = event.target.closest("[data-auth-open]");
+    if (authOpen) {
+      if (currentUser()) {
+        window.location.href = authRootPath("profil/index.html");
+      } else {
+        openAuthDialog("login");
+      }
       setMobileMenu(false);
+      return;
+    }
+    if (event.target.closest("a") || event.target.closest("[data-platform-library]")) {
+      setMobileMenu(false);
+    }
+  });
+
+  document.addEventListener("click", (event) => {
+    const personalLink = event.target.closest('a[href*="meine-analysen"], a[href*="profil"]');
+    if (!personalLink || currentUser()) return;
+    event.preventDefault();
+    setMobileMenu(false);
+    openAuthDialog("login", "Bitte melde dich an oder registriere dich, um persönliche Bereiche zu öffnen.");
+  });
+
+  authDialog.addEventListener("click", (event) => {
+    if (event.target.closest("[data-auth-close]")) closeAuthDialog();
+    const tabButton = event.target.closest("[data-auth-tab]");
+    if (tabButton) setAuthTab(tabButton.dataset.authTab);
+  });
+
+  savePromptDialog.addEventListener("click", (event) => {
+    if (event.target.closest("[data-save-prompt-close]")) {
+      closeSavePrompt();
+      return;
+    }
+    if (event.target.closest("[data-save-prompt-login]")) {
+      closeSavePrompt();
+      openAuthDialog("login");
+      return;
+    }
+    if (event.target.closest("[data-save-prompt-register]")) {
+      closeSavePrompt();
+      openAuthDialog("register");
+    }
+  });
+
+  authDialog.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const form = event.target.closest("[data-auth-panel]");
+    if (!form) return;
+    const mode = form.dataset.authPanel;
+    const formData = new FormData(form);
+    const email = String(formData.get("email") || "").trim().toLowerCase();
+    const password = String(formData.get("password") || "");
+    const users = readJson(authUsersKey, []);
+
+    if (mode === "login") {
+      const user = users.find((item) => item.email === email && item.passwordHash === localPasswordHash(password));
+      if (!user) {
+        setAuthMessage("Diese lokalen Zugangsdaten wurden nicht gefunden.");
+        return;
+      }
+      loginUser({ id: user.id, name: user.name, email: user.email, createdAt: user.createdAt });
+      return;
+    }
+
+    if (mode === "register") {
+      if (users.some((item) => item.email === email)) {
+        setAuthMessage("Für diese E-Mail gibt es bereits ein lokales Konto.");
+        return;
+      }
+      const user = {
+        id: `local-${Date.now()}`,
+        name: String(formData.get("name") || "Adlercode Nutzer").trim(),
+        email,
+        passwordHash: localPasswordHash(password),
+        createdAt: new Date().toISOString(),
+      };
+      writeJson(authUsersKey, [...users, user]);
+      loginUser({ id: user.id, name: user.name, email: user.email, createdAt: user.createdAt });
+      return;
+    }
+
+    setAuthMessage("Passwort-Wiederherstellung ist für das spätere Backend vorbereitet.");
+  });
+
+  profileMenu.addEventListener("click", (event) => {
+    if (event.target.closest("[data-auth-logout]")) {
+      window.AdlercodeAuth.logout();
     }
   });
 
   document.addEventListener("click", (event) => {
     if (!siteHeader.contains(event.target)) {
       setMobileMenu(false);
+      profileMenu.hidden = true;
+      authButton.setAttribute("aria-expanded", "false");
     }
   });
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
       setMobileMenu(false);
+      profileMenu.hidden = true;
+      closeAuthDialog();
+      closeSavePrompt();
     }
   });
 
@@ -73,6 +362,8 @@ if (siteHeader) {
       setMobileMenu(false);
     }
   });
+
+  updateAuthUi();
 }
 
 const revealObserver = new IntersectionObserver(
@@ -102,6 +393,168 @@ window.addEventListener(
   },
   { passive: true }
 );
+
+const platformHome = document.querySelector("[data-platform-home]");
+
+if (platformHome) {
+  function category(title, entries = []) {
+    return { id: slug(title), title, entries: entries.map((entryTitle) => ({ id: slug(entryTitle), title: entryTitle })) };
+  }
+
+  function slug(value) {
+    return value.toLowerCase().replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  }
+
+  const platformLibraries = {
+    muster: {
+      title: "Musterbibliothek",
+      categories: [
+        category("Adlercode", ["Was ist Adlercode?", "Ziel", "Framework"]),
+        category("Personen", ["Natürliche Person", "Juristische Person", "Einzelperson", "Gemeinschaft"]),
+        category("Systeme", ["Adlersystem", "Schlangensystem", "NPC-System"]),
+        category("Personenprofile", ["Empath", "Narzisst", "Psychopath", "Covert", "NPC-Programme"]),
+        category("Moral", ["Moralpyramide", "Sicherheitspyramide"]),
+        category("Identität", ["Main-ID", "Masken-ID", "Programmwechsel"]),
+        category("Wahrnehmung", ["Filter", "NPC-Filter", "Wahrnehmung", "Realität"]),
+        category("Narrative", ["Narrativ", "Narrativkontrolle", "NPC-Narrative", "Rollenspiel", "Rollenwechsel"]),
+        category("Analyse", ["Musteranalyse", "Rollenanalyse", "Systemanalyse", "Narrativanalyse"]),
+        category("Gewalt", ["Naturgewalt", "Systemische Gewalt", "Natürliche Gewalt", "Zwangsgewalt"]),
+      ],
+    },
+    buch: {
+      title: "Bücher",
+      categories: [
+        category("Adlercode-Bücher", ["Lead by Example", "Masks vs. Claws", "Force of Nature", "Setz die Brille auf! – NPC-Filter", "Adler-System"]),
+        category("Autoren"),
+        category("Themen"),
+      ],
+    },
+    film: { title: "Filmanalyse", categories: [category("Filme"), category("Serien"), category("Charaktere"), category("Musteranalysen"), category("Rollenanalysen"), category("Verhaltensanalysen")] },
+  };
+
+  const platformContent = platformHome.querySelector("[data-platform-content]");
+  const platformSearch = platformHome.querySelector("[data-platform-search]");
+
+  function allLibraries() {
+    return Object.entries(platformLibraries).map(([id, library]) => ({ id, ...library }));
+  }
+
+  function showPlatformContent(markup) {
+    if (!platformContent) return;
+    platformHome.classList.add("has-platform-content");
+    platformContent.innerHTML = markup;
+  }
+
+  function clearPlatformContent() {
+    if (!platformContent) return;
+    platformHome.classList.remove("has-platform-content");
+    platformContent.innerHTML = "";
+  }
+
+  function renderPlatformLibrary(id) {
+    const current = platformLibraries[id] || platformLibraries.muster;
+    document.querySelectorAll(".mobile-nav-panel [data-platform-library]").forEach((button) => {
+      button.classList.toggle("is-selected", button.dataset.platformLibrary === id);
+    });
+    showPlatformContent(`
+      <article class="platform-panel">
+        <h2>${current.title}</h2>
+        <div class="platform-list">
+          ${current.categories.map((item) => `<button type="button" data-platform-category="${item.id}" data-platform-library-ref="${id}">${item.title}</button>`).join("")}
+        </div>
+      </article>
+    `);
+  }
+
+  function renderPlatformCategory(libraryId, categoryId) {
+    const library = platformLibraries[libraryId] || platformLibraries.muster;
+    const selectedCategory = library.categories.find((item) => item.id === categoryId);
+    if (!selectedCategory) return;
+    showPlatformContent(`
+      <article class="platform-panel">
+        <h2>${selectedCategory.title}</h2>
+        <div class="platform-list">
+          ${selectedCategory.entries.map((item) => `<button type="button" data-platform-entry="${item.id}" data-platform-library-ref="${libraryId}" data-platform-category-ref="${selectedCategory.id}">${item.title}</button>`).join("")}
+        </div>
+      </article>
+    `);
+  }
+
+  function renderPlatformEntry(libraryId, categoryId, entryId) {
+    const library = platformLibraries[libraryId] || platformLibraries.muster;
+    const selectedCategory = library.categories.find((item) => item.id === categoryId);
+    const selectedEntry = selectedCategory?.entries.find((item) => item.id === entryId);
+    if (!selectedEntry) return;
+    showPlatformContent(`
+      <article class="platform-panel platform-entry">
+        <h2>${selectedEntry.title}</h2>
+        <dl>
+          <div><dt>Definition</dt><dd>Wird ergänzt.</dd></div>
+          <div><dt>Einordnung</dt><dd>${library.title} / ${selectedCategory.title}</dd></div>
+          <div><dt>Verwandte Begriffe</dt><dd>Wird ergänzt.</dd></div>
+          <div><dt>Weiterführende Inhalte</dt><dd>Bücher, Filmanalysen und Quellen können später verknüpft werden.</dd></div>
+        </dl>
+      </article>
+    `);
+  }
+
+  function renderPlatformSearch(query) {
+    const clean = query.trim().toLowerCase();
+    if (!clean) {
+      clearPlatformContent();
+      return;
+    }
+
+    const results = allLibraries()
+      .flatMap((library) => library.categories.flatMap((item) => [
+        { library, category: item, title: item.title },
+        ...item.entries.map((entry) => ({ library, category: item, entry, title: entry.title })),
+      ]))
+      .filter((item) => [item.library.title, item.category.title, item.title].join(" ").toLowerCase().includes(clean));
+
+    showPlatformContent(`
+      <article class="platform-panel">
+        <p class="eyebrow">Suche</p>
+        <div class="platform-list">
+          ${results.map((item) => item.entry
+            ? `<button type="button" data-platform-entry="${item.entry.id}" data-platform-library-ref="${item.library.id}" data-platform-category-ref="${item.category.id}">${item.title}<span>${item.library.title} / ${item.category.title}</span></button>`
+            : `<button type="button" data-platform-category="${item.category.id}" data-platform-library-ref="${item.library.id}">${item.title}<span>${item.library.title}</span></button>`
+          ).join("")}
+        </div>
+      </article>
+    `);
+  }
+
+  platformHome.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-platform-library]");
+    if (button) {
+      renderPlatformLibrary(button.dataset.platformLibrary);
+      platformHome.classList.remove("is-platform-menu-open");
+      return;
+    }
+
+    const categoryButton = event.target.closest("[data-platform-category]");
+    if (categoryButton) {
+      renderPlatformCategory(categoryButton.dataset.platformLibraryRef, categoryButton.dataset.platformCategory);
+      return;
+    }
+
+    const entryButton = event.target.closest("[data-platform-entry]");
+    if (entryButton) {
+      renderPlatformEntry(entryButton.dataset.platformLibraryRef, entryButton.dataset.platformCategoryRef, entryButton.dataset.platformEntry);
+    }
+  });
+
+  document.addEventListener("click", (event) => {
+    const button = event.target.closest(".mobile-nav-panel [data-platform-library]");
+    if (button) {
+      event.preventDefault();
+      renderPlatformLibrary(button.dataset.platformLibrary);
+    }
+  });
+
+  platformSearch?.addEventListener("input", (event) => renderPlatformSearch(event.target.value));
+}
 
 document.querySelectorAll("[data-origin-trigger]").forEach((trigger) => {
   const panelId = trigger.getAttribute("aria-controls");
@@ -428,7 +881,7 @@ if (testForm && questionsRoot && testMessage && testResult) {
       <div class="result-actions">
         <button class="button button-secondary" type="button" data-test-reset>Test wiederholen</button>
         <a class="button button-secondary" href="../adler-kodex/index.html">Adler-Kodex lesen</a>
-        <a class="button button-secondary" href="../index.html#book">Buch ansehen</a>
+        <a class="button button-secondary" href="../buecher/index.html">Bücher ansehen</a>
       </div>
     `;
     testResult.hidden = false;

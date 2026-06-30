@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Adlercode | Musterbibliothek</title>
+    <title>Musterbibliothek | Adlercode</title>
     <meta
       name="description"
-      content="Die AdlerCode-Musterbibliothek: eine wachsende Sammlung von Mustern, Systemen, Modellen und Perspektiven."
+      content="Adlercode Musterbibliothek: ein Explorer für Muster, Systeme, Programme und Begriffe."
     />
     <link rel="stylesheet" href="../adlercode.css" />
     <link rel="icon" type="image/png" sizes="32x32" href="../assets/favicons/favicon-32x32.png" />
@@ -14,277 +14,60 @@
     <link rel="apple-touch-icon" sizes="180x180" href="../assets/favicons/apple-touch-icon.png" />
     <link rel="manifest" href="../site.webmanifest" />
   </head>
-  <body>
+  <body class="library-explorer-body">
     <header class="site-header" aria-label="Adlercode Navigation">
       <a class="brand" href="../index.html" aria-label="Adlercode Startseite">
         <span class="brand-mark" aria-hidden="true"></span>
         <span>Adlercode</span>
       </a>
       <nav class="site-nav" aria-label="Hauptnavigation">
-        <a href="../index.html#concept">Rahmen</a>
-        <a href="../index.html#book">Buch</a>
-        <a href="../index.html#vision">Vision</a>
-        <a href="../adler-kodex/index.html">Adler-Kodex</a>
-        <a href="../adler-vs-schlange-test/index.html">Test</a>
-        <a href="./index.html">Musterbibliothek</a>
-        <a href="../faq/index.html">FAQ</a>
-        <a href="../kontakt.html">Kontakt</a>
-        <a href="../datenschutz.html">Datenschutz</a>
       </nav>
     </header>
 
-    <main id="top">
-      <section class="content-section page-section library-page reveal is-visible" aria-labelledby="library-title">
-        <p class="eyebrow">Adlercode</p>
-        <h1 id="library-title">Musterbibliothek</h1>
-        <p class="page-subtitle">Eine wachsende Sammlung von Mustern, Systemen, Modellen und Perspektiven.</p>
+    <main id="top" class="library-explorer-shell">
+      <section class="library-explorer" aria-label="Musterbibliothek Explorer">
+        <div class="library-explorer-toolbar">
+          <button
+            class="library-menu-button"
+            type="button"
+            aria-label="Bibliotheksnavigation öffnen"
+            aria-expanded="false"
+            data-explorer-menu
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
 
-        <div class="page-copy">
-          <p>AdlerCode ist mehr als ein Buch.</p>
-          <p>Es ist ein Mustererkennungs- und Filtersystem.</p>
-          <p>Die Musterbibliothek ist der Ort, an dem Begriffe, Systeme, Programme, Modelle und Perspektiven gesammelt und weiterentwickelt werden.</p>
-          <p>Sie soll helfen, die Programme hinter Menschen, Beziehungen und Systemen sichtbar zu machen.</p>
-          <p>Nicht als starre Wahrheit.</p>
-          <p>Sondern als wachsendes System zur Mustererkennung.</p>
+          <div class="library-explorer-search">
+            <label for="pattern-library-search">Musterbibliothek</label>
+            <input
+              id="pattern-library-search"
+              type="search"
+              placeholder="Suche nach Mustern, Systemen oder Begriffen ..."
+              autocomplete="off"
+              data-pattern-search
+            />
+          </div>
         </div>
 
-        <section class="library-section" aria-labelledby="library-start-title">
-          <h2 id="library-start-title">Der Anfang der Bibliothek</h2>
-          <div class="page-copy">
-            <p>Jedes Buch erweitert die AdlerCode-Bibliothek.</p>
-            <p>Buch 1 bildet den Anfang.</p>
-            <p>Es konzentriert sich auf die grundlegende Dynamik zwischen Adler und Schlange.</p>
-            <p>Der Adler steht für Bewusstsein, Verantwortung, Mustererkennung und Freiheit.</p>
-            <p>Die Schlange steht für Täuschung, Kontrolle, Fassade und Abhängigkeit.</p>
-          </div>
-
-          <article class="library-book-card">
-            <div class="library-book-cover">
-              <img
-                src="../covers/lead-by-example.jpg"
-                alt="Buchcover von Lead by Example"
-                loading="lazy"
-                onerror="console.error('Buchcover fehlt: covers/lead-by-example.jpg')"
-              />
+        <div class="library-explorer-layout">
+          <aside class="library-explorer-sidebar" aria-label="Bibliotheksnavigation" data-explorer-sidebar>
+            <div class="library-sidebar-head">
+              <button class="library-sidebar-close" type="button" aria-label="Navigation schließen" data-explorer-close>Schließen</button>
             </div>
-            <div>
-              <span class="status-pill">Verfügbar</span>
-              <h3>Buch 1: Adler vs. Schlange</h3>
-              <p>Der Einstieg in das AdlerCode-System.</p>
-              <p>Dieses Buch legt die Grundlage für das Schlangensystem, das Adlersystem und die ersten Filter zur Erkennung von Mustern in Menschen, Beziehungen und Systemen.</p>
-              <ul class="library-topic-list">
-                <li>Adler-System</li>
-                <li>Schlangensystem</li>
-                <li>Manipulation</li>
-                <li>Kontrolle</li>
-                <li>Freiheit</li>
-                <li>Verantwortung</li>
-                <li>Instinkt</li>
-                <li>Mustererkennung</li>
-                <li>Fassade</li>
-                <li>Programme</li>
-              </ul>
-              <a class="button button-primary" href="../index.html#book">Buch ansehen</a>
+            <div class="library-search-results" data-search-results></div>
+            <nav class="library-tree" aria-label="Kategorien und Unterkategorien" data-explorer-nav></nav>
+          </aside>
+
+          <section class="library-explorer-content" aria-live="polite" data-explorer-content>
+            <div class="library-empty-state">
+              <p class="eyebrow">Musterbibliothek</p>
+              <h1>Musterbibliothek</h1>
+              <p>Wähle links eine Kategorie oder nutze die Suche.</p>
             </div>
-          </article>
-        </section>
-
-        <section class="library-section" aria-labelledby="term-library-title">
-          <h2 id="term-library-title">Begriffsbibliothek</h2>
-          <p class="section-subtitle">Die ersten Systeme, Modelle und Filter des AdlerCode-Systems.</p>
-
-          <div class="library-accordion-list">
-            <article class="library-accordion">
-              <button class="library-accordion-trigger" type="button" aria-expanded="false" aria-controls="library-system-adler" data-library-trigger>
-                <span>Adlersystem</span>
-                <span class="origin-accordion-icon" aria-hidden="true"></span>
-              </button>
-              <div class="library-accordion-panel" id="library-system-adler" data-library-panel>
-                <div class="library-accordion-inner">
-                  <p>Das Adlersystem ist ein dynamisches System.</p>
-                  <p>Es basiert auf Bewusstsein, Mustererkennung, Verantwortung, Freiheit und Entwicklung.</p>
-                  <p>Dynamische Systeme können lernen, wachsen und sich an neue Erkenntnisse anpassen.</p>
-                  <p>Das Adlersystem dient dem Leben.</p>
-                  <p>Nicht umgekehrt.</p>
-                </div>
-              </div>
-            </article>
-
-            <article class="library-accordion">
-              <button class="library-accordion-trigger" type="button" aria-expanded="false" aria-controls="library-system-schlange" data-library-trigger>
-                <span>Schlangensystem</span>
-                <span class="origin-accordion-icon" aria-hidden="true"></span>
-              </button>
-              <div class="library-accordion-panel" id="library-system-schlange" data-library-panel>
-                <div class="library-accordion-inner">
-                  <p>Das Schlangensystem ist ein starres System.</p>
-                  <p>Es basiert auf Kontrolle, Fassade, Täuschung, Abhängigkeit und Manipulation.</p>
-                  <p>Starre Systeme erzeugen Regeln, Schlupflöcher und Hierarchien, die oft wichtiger werden als die Menschen selbst.</p>
-                  <p>Das Schlangensystem versucht Stabilität durch Kontrolle zu erzeugen.</p>
-                </div>
-              </div>
-            </article>
-
-            <article class="library-accordion">
-              <button class="library-accordion-trigger" type="button" aria-expanded="false" aria-controls="library-system-covert" data-library-trigger>
-                <span>Covert-System</span>
-                <span class="origin-accordion-icon" aria-hidden="true"></span>
-              </button>
-              <div class="library-accordion-panel" id="library-system-covert" data-library-panel>
-                <div class="library-accordion-inner">
-                  <p>Das Covert-System arbeitet verdeckt.</p>
-                  <p>Es nutzt indirekte Kontrolle, Schuldverschiebung, Opferrollen und subtile Manipulation.</p>
-                  <p>Die sichtbare Fassade wirkt oft harmlos oder hilfsbereit, während darunter andere Dynamiken wirken.</p>
-                </div>
-              </div>
-            </article>
-
-            <article class="library-accordion">
-              <button class="library-accordion-trigger" type="button" aria-expanded="false" aria-controls="library-system-psycho" data-library-trigger>
-                <span>Psychosystem</span>
-                <span class="origin-accordion-icon" aria-hidden="true"></span>
-              </button>
-              <div class="library-accordion-panel" id="library-system-psycho" data-library-panel>
-                <div class="library-accordion-inner">
-                  <p>Das Psychosystem orientiert sich an Macht, Kontrolle und Nutzen.</p>
-                  <p>Menschen werden häufig als Ressourcen oder Werkzeuge betrachtet.</p>
-                  <p>Empathie wird funktional eingesetzt oder spielt nur eine untergeordnete Rolle.</p>
-                </div>
-              </div>
-            </article>
-
-            <article class="library-accordion">
-              <button class="library-accordion-trigger" type="button" aria-expanded="false" aria-controls="library-system-npc" data-library-trigger>
-                <span>NPC-System</span>
-                <span class="origin-accordion-icon" aria-hidden="true"></span>
-              </button>
-              <div class="library-accordion-panel" id="library-system-npc" data-library-panel>
-                <div class="library-accordion-inner">
-                  <p>Das NPC-System beschreibt Programme, die unbewusst ablaufen.</p>
-                  <p>NPC dient im AdlerCode als Filter und als Brille zur Mustererkennung.</p>
-                  <p>N = Narzisst</p>
-                  <p>P = Psychopath</p>
-                  <p>C = Covert</p>
-                  <p>Der NPC-Filter hilft dabei, Dynamiken sichtbar zu machen, die sich hinter Fassaden, Rollen und Verhaltensmustern verbergen.</p>
-                  <p>Dieses Modell wird in zukünftigen AdlerCode-Büchern weiterentwickelt.</p>
-                </div>
-              </div>
-            </article>
-          </div>
-        </section>
-
-        <section class="library-section" aria-labelledby="base-terms-title">
-          <h2 id="base-terms-title">Grundbegriffe</h2>
-          <div class="library-accordion-list">
-            <article class="library-accordion">
-              <button class="library-accordion-trigger" type="button" aria-expanded="false" aria-controls="base-term-programm" data-library-trigger><span>Programm</span><span class="origin-accordion-icon" aria-hidden="true"></span></button>
-              <div class="library-accordion-panel" id="base-term-programm" data-library-panel><div class="library-accordion-inner"><p>Dieser Begriff wird in zukünftigen AdlerCode-Inhalten weiter ausgearbeitet.</p></div></div>
-            </article>
-            <article class="library-accordion">
-              <button class="library-accordion-trigger" type="button" aria-expanded="false" aria-controls="base-term-muster" data-library-trigger><span>Muster</span><span class="origin-accordion-icon" aria-hidden="true"></span></button>
-              <div class="library-accordion-panel" id="base-term-muster" data-library-panel><div class="library-accordion-inner"><p>Dieser Begriff wird in zukünftigen AdlerCode-Inhalten weiter ausgearbeitet.</p></div></div>
-            </article>
-            <article class="library-accordion">
-              <button class="library-accordion-trigger" type="button" aria-expanded="false" aria-controls="base-term-fassade" data-library-trigger><span>Fassade</span><span class="origin-accordion-icon" aria-hidden="true"></span></button>
-              <div class="library-accordion-panel" id="base-term-fassade" data-library-panel><div class="library-accordion-inner"><p>Dieser Begriff wird in zukünftigen AdlerCode-Inhalten weiter ausgearbeitet.</p></div></div>
-            </article>
-            <article class="library-accordion">
-              <button class="library-accordion-trigger" type="button" aria-expanded="false" aria-controls="base-term-manipulation" data-library-trigger><span>Manipulation</span><span class="origin-accordion-icon" aria-hidden="true"></span></button>
-              <div class="library-accordion-panel" id="base-term-manipulation" data-library-panel><div class="library-accordion-inner"><p>Dieser Begriff wird in zukünftigen AdlerCode-Inhalten weiter ausgearbeitet.</p></div></div>
-            </article>
-            <article class="library-accordion">
-              <button class="library-accordion-trigger" type="button" aria-expanded="false" aria-controls="base-term-kontrolle" data-library-trigger><span>Kontrolle</span><span class="origin-accordion-icon" aria-hidden="true"></span></button>
-              <div class="library-accordion-panel" id="base-term-kontrolle" data-library-panel><div class="library-accordion-inner"><p>Dieser Begriff wird in zukünftigen AdlerCode-Inhalten weiter ausgearbeitet.</p></div></div>
-            </article>
-            <article class="library-accordion">
-              <button class="library-accordion-trigger" type="button" aria-expanded="false" aria-controls="base-term-verantwortung" data-library-trigger><span>Verantwortung</span><span class="origin-accordion-icon" aria-hidden="true"></span></button>
-              <div class="library-accordion-panel" id="base-term-verantwortung" data-library-panel><div class="library-accordion-inner"><p>Dieser Begriff wird in zukünftigen AdlerCode-Inhalten weiter ausgearbeitet.</p></div></div>
-            </article>
-            <article class="library-accordion">
-              <button class="library-accordion-trigger" type="button" aria-expanded="false" aria-controls="base-term-freiheit" data-library-trigger><span>Freiheit</span><span class="origin-accordion-icon" aria-hidden="true"></span></button>
-              <div class="library-accordion-panel" id="base-term-freiheit" data-library-panel><div class="library-accordion-inner"><p>Dieser Begriff wird in zukünftigen AdlerCode-Inhalten weiter ausgearbeitet.</p></div></div>
-            </article>
-            <article class="library-accordion">
-              <button class="library-accordion-trigger" type="button" aria-expanded="false" aria-controls="base-term-instinkt" data-library-trigger><span>Instinkt</span><span class="origin-accordion-icon" aria-hidden="true"></span></button>
-              <div class="library-accordion-panel" id="base-term-instinkt" data-library-panel><div class="library-accordion-inner"><p>Dieser Begriff wird in zukünftigen AdlerCode-Inhalten weiter ausgearbeitet.</p></div></div>
-            </article>
-            <article class="library-accordion">
-              <button class="library-accordion-trigger" type="button" aria-expanded="false" aria-controls="base-term-bewusstsein" data-library-trigger><span>Bewusstsein</span><span class="origin-accordion-icon" aria-hidden="true"></span></button>
-              <div class="library-accordion-panel" id="base-term-bewusstsein" data-library-panel><div class="library-accordion-inner"><p>Dieser Begriff wird in zukünftigen AdlerCode-Inhalten weiter ausgearbeitet.</p></div></div>
-            </article>
-          </div>
-        </section>
-
-        <section class="library-section" aria-labelledby="filters-title">
-          <h2 id="filters-title">Gegensätze und Filter</h2>
-          <div class="library-accordion-list">
-            <article class="library-accordion">
-              <button class="library-accordion-trigger" type="button" aria-expanded="false" aria-controls="filter-natural-systemic" data-library-trigger><span>Natürliche Gewalt vs. Systemische Gewalt</span><span class="origin-accordion-icon" aria-hidden="true"></span></button>
-              <div class="library-accordion-panel" id="filter-natural-systemic" data-library-panel><div class="library-accordion-inner"><p>Dieses Konzept wird in zukünftigen AdlerCode-Inhalten weiter erläutert.</p></div></div>
-            </article>
-            <article class="library-accordion">
-              <button class="library-accordion-trigger" type="button" aria-expanded="false" aria-controls="filter-natural-forced" data-library-trigger><span>Natürlich vs. Zwanghaft</span><span class="origin-accordion-icon" aria-hidden="true"></span></button>
-              <div class="library-accordion-panel" id="filter-natural-forced" data-library-panel><div class="library-accordion-inner"><p>Dieses Konzept wird in zukünftigen AdlerCode-Inhalten weiter erläutert.</p></div></div>
-            </article>
-            <article class="library-accordion">
-              <button class="library-accordion-trigger" type="button" aria-expanded="false" aria-controls="filter-official-unofficial" data-library-trigger><span>Offiziell vs. Inoffiziell</span><span class="origin-accordion-icon" aria-hidden="true"></span></button>
-              <div class="library-accordion-panel" id="filter-official-unofficial" data-library-panel><div class="library-accordion-inner"><p>Dieses Konzept wird in zukünftigen AdlerCode-Inhalten weiter erläutert.</p></div></div>
-            </article>
-            <article class="library-accordion">
-              <button class="library-accordion-trigger" type="button" aria-expanded="false" aria-controls="filter-legal-illegal" data-library-trigger><span>Legal vs. Illegal</span><span class="origin-accordion-icon" aria-hidden="true"></span></button>
-              <div class="library-accordion-panel" id="filter-legal-illegal" data-library-panel><div class="library-accordion-inner"><p>Dieses Konzept wird in zukünftigen AdlerCode-Inhalten weiter erläutert.</p></div></div>
-            </article>
-            <article class="library-accordion">
-              <button class="library-accordion-trigger" type="button" aria-expanded="false" aria-controls="filter-truth-facade" data-library-trigger><span>Wahrheit vs. Fassade</span><span class="origin-accordion-icon" aria-hidden="true"></span></button>
-              <div class="library-accordion-panel" id="filter-truth-facade" data-library-panel><div class="library-accordion-inner"><p>Dieses Konzept wird in zukünftigen AdlerCode-Inhalten weiter erläutert.</p></div></div>
-            </article>
-            <article class="library-accordion">
-              <button class="library-accordion-trigger" type="button" aria-expanded="false" aria-controls="filter-freedom-control" data-library-trigger><span>Freiheit vs. Kontrolle</span><span class="origin-accordion-icon" aria-hidden="true"></span></button>
-              <div class="library-accordion-panel" id="filter-freedom-control" data-library-panel><div class="library-accordion-inner"><p>Dieses Konzept wird in zukünftigen AdlerCode-Inhalten weiter erläutert.</p></div></div>
-            </article>
-            <article class="library-accordion">
-              <button class="library-accordion-trigger" type="button" aria-expanded="false" aria-controls="filter-awareness-blindness" data-library-trigger><span>Bewusstsein vs. Blindheit</span><span class="origin-accordion-icon" aria-hidden="true"></span></button>
-              <div class="library-accordion-panel" id="filter-awareness-blindness" data-library-panel><div class="library-accordion-inner"><p>Dieses Konzept wird in zukünftigen AdlerCode-Inhalten weiter erläutert.</p></div></div>
-            </article>
-          </div>
-        </section>
-
-        <section class="library-section" aria-labelledby="library-voices-title">
-          <h2 id="library-voices-title">Perspektiven &amp; Stimmen</h2>
-          <div class="page-copy">
-            <p>Die Musterbibliothek soll langfristig nicht nur aus AdlerCode-Inhalten bestehen.</p>
-            <p>Sie soll auch ausgewählte Perspektiven von Menschen sichtbar machen, die sich mit Mustern, Manipulation, Narzissmus, Profilen, Systemen, Bewusstsein, Beziehungen oder menschlichem Verhalten beschäftigen.</p>
-            <p>Hier können künftig Autoren, Content Creator, Coaches, Forscher, YouTube-Kanäle oder andere Stimmen verlinkt werden, deren Inhalte zur Vision von AdlerCode passen.</p>
-            <p>Nicht als offene Plattform für alles.</p>
-            <p>Sondern als kuratierter Bereich für wertvolle Perspektiven.</p>
-          </div>
-
-          <div class="library-note">
-            <h3>Dieser Bereich befindet sich im Aufbau.</h3>
-            <p>Wenn du Inhalte erstellst oder eine Perspektive teilen möchtest, die zur AdlerCode-Bibliothek passt, kannst du dich unter <a class="inline-link" href="mailto:info@adlercode.com">info@adlercode.com</a> melden.</p>
-            <a class="button button-secondary" href="mailto:info@adlercode.com">Kontakt aufnehmen</a>
-          </div>
-        </section>
-
-        <section class="library-section" aria-labelledby="library-vision-title">
-          <h2 id="library-vision-title">Die langfristige Vision</h2>
-          <div class="page-copy">
-            <p>Die Vision ist ein lebendiges Mustererkennungssystem.</p>
-            <p>Heute beginnt es mit Buch 1.</p>
-            <p>Später können daraus weitere Bücher, digitale Werkzeuge, interaktive Tests, Community-Funktionen oder eine App entstehen.</p>
-            <p>Die Bibliothek soll nicht nur konsumiert werden.</p>
-            <p>Sie soll mit Erkenntnis wachsen.</p>
-            <p>Mit jedem Buch.</p>
-            <p>Mit jeder Perspektive.</p>
-            <p>Mit jeder echten Beobachtung.</p>
-          </div>
-        </section>
-
-        <section class="library-cta" aria-labelledby="library-cta-title">
-          <h2 id="library-cta-title">Beginne mit Buch 1</h2>
-          <p>Wer die Musterbibliothek verstehen will, beginnt mit dem Ursprung: Adler vs. Schlange.</p>
-          <a class="button button-primary" href="../index.html#book">Buch ansehen</a>
-        </section>
+          </section>
+        </div>
       </section>
     </main>
 
@@ -299,6 +82,8 @@
       </div>
     </footer>
 
-    <script src="../adlercode.js?v=mobile-nav"></script>
+    <script src="../adlercode-terms.js?v=terms"></script>
+    <script src="../adlercode.js?v=explorer"></script>
+    <script src="../adlercode-bibliotheken.js?v=bibliotheken"></script>
   </body>
 </html>
