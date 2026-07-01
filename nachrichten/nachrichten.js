@@ -7,6 +7,7 @@
   const storageKey = window.AdlercodeChat?.storageKey || "adlercode-chats-v1";
   const params = new URLSearchParams(window.location.search);
   let activeChatId = params.get("chat") || "";
+  let userSelectedChat = Boolean(activeChatId);
 
   function escapeHtml(value) {
     return String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
@@ -56,10 +57,31 @@
     return (chat.messages || []).at(-1);
   }
 
+  function contextLabel(chat) {
+    const context = chat?.context || {};
+    return context.title || context.caseTitle || context.analysisTitle || context.filmTitle || "";
+  }
+
+  function contextIcon(chat) {
+    const context = chat?.context || {};
+    return context.icon || ({ case: "Justice", film: "Film", book: "Buch", term: "Begriff", expert: "Experte" }[context.type] || "Analyse");
+  }
+
+  function contextHref(chat) {
+    const context = chat?.context || {};
+    return context.href || context.url || "";
+  }
+
+  function unreadCount(chat, user) {
+    return (chat.messages || []).filter((message) => message.senderId !== user.id && !(message.readBy || []).includes(user.id)).length;
+  }
+
   function renderLoginGate() {
     listRoot.innerHTML = "";
+    root.classList.remove("is-thread-open");
     threadRoot.innerHTML = `
       <div class="messages-empty messages-login-gate">
+        <h2>Nachrichten sind persönlich</h2>
         <p>Bitte melde dich an oder registriere dich, um Nachrichten zu senden.</p>
         <div class="messages-login-actions">
           <button type="button" data-message-login>Anmelden</button>
@@ -103,14 +125,18 @@
       .map((chat) => {
         const participant = otherParticipant(chat, user);
         const message = lastMessage(chat);
+        const unread = unreadCount(chat, user);
         return `
           <button type="button" class="messages-conversation ${chat.id === activeChatId ? "is-active" : ""}" data-chat-id="${escapeHtml(chat.id)}">
             <span class="messages-avatar">${escapeHtml(participant.avatarInitial || "A")}</span>
             <span>
               <strong>${escapeHtml(participant.username || participant.name || "Adlercode Nutzer")}</strong>
-              <small>${escapeHtml(message?.text || chat.context?.filmTitle || "Neue Unterhaltung")}</small>
+              <small>${escapeHtml(message?.text || contextLabel(chat) || "Neue Unterhaltung")}</small>
             </span>
-            <time>${escapeHtml(formatDate(message?.createdAt || chat.updatedAt))}</time>
+            <span class="messages-conversation-meta">
+              <time>${escapeHtml(formatDate(message?.createdAt || chat.updatedAt))}</time>
+              ${unread ? `<em>${unread}</em>` : ""}
+            </span>
           </button>
         `;
       })
@@ -119,9 +145,12 @@
 
   function renderThread(chat, user) {
     if (!chat) {
+      root.classList.remove("is-thread-open");
       threadRoot.innerHTML = `
         <div class="messages-empty">
-          <p>Wähle eine Unterhaltung aus.</p>
+          <h2>Wähle eine Unterhaltung aus</h2>
+          <p>Hier kannst du dich mit anderen Nutzern über Analysen, Fälle und Muster austauschen.</p>
+          <a href="../community/">Community entdecken</a>
         </div>
       `;
       return;
@@ -130,20 +159,37 @@
     const participant = otherParticipant(chat, user);
     const blocked = (chat.blockedBy || []).includes(user.id);
     const messages = chat.messages || [];
+    const context = contextLabel(chat);
+    const contextUrl = contextHref(chat);
+    root.classList.toggle("is-thread-open", userSelectedChat || !window.matchMedia("(max-width: 520px)").matches);
     threadRoot.innerHTML = `
       <header class="messages-thread-head">
+        <button type="button" class="messages-back-button" data-chat-back aria-label="Zurück zu den Unterhaltungen">Zurück</button>
         <div class="messages-avatar large">${escapeHtml(participant.avatarInitial || "A")}</div>
-        <div>
+        <div class="messages-thread-title">
           <h2>${escapeHtml(participant.username || participant.name || "Adlercode Nutzer")}</h2>
-          ${chat.context?.filmTitle ? `<p>${escapeHtml(chat.context.filmTitle)}${chat.context.characterName ? ` · ${escapeHtml(chat.context.characterName)}` : ""}</p>` : ""}
+          <p>Analyse-Austausch</p>
+        </div>
+        <div class="messages-thread-tools">
+          <a href="../profil/?user=${encodeURIComponent(participant.id || participant.username || "")}">Profil ansehen</a>
+          <details class="messages-safety-menu">
+            <summary aria-label="Chatoptionen">Optionen</summary>
+            <div>
+              <button type="button" data-chat-block>${blocked ? "Blockierung aufheben" : "Nutzer blockieren"}</button>
+              <button type="button" data-chat-report>Nachricht melden</button>
+              <button type="button" data-chat-delete>Chat löschen</button>
+            </div>
+          </details>
         </div>
       </header>
 
-      <div class="messages-thread-actions" aria-label="Chat-Sicherheit">
-        <button type="button" data-chat-block>${blocked ? "Blockierung aufheben" : "Nutzer blockieren"}</button>
-        <button type="button" data-chat-report>Nachricht melden</button>
-        <button type="button" data-chat-delete>Chat löschen</button>
-      </div>
+      ${context ? `
+        <div class="messages-context">
+          <span>Gestartet aus:</span>
+          <em>${escapeHtml(contextIcon(chat))}</em>
+          ${contextUrl ? `<a href="${escapeHtml(contextUrl)}">${escapeHtml(context)}</a>` : `<strong>${escapeHtml(context)}</strong>`}
+        </div>
+      ` : ""}
 
       <div class="messages-history">
         ${messages.length
@@ -152,7 +198,7 @@
                 (message) => `
                   <article class="messages-bubble ${message.senderId === user.id ? "is-own" : ""}" data-message-id="${escapeHtml(message.id)}">
                     <strong>${message.senderId === user.id ? "Du" : escapeHtml(participant.username || "Nutzer")}</strong>
-                    <p>${escapeHtml(message.text)}</p>
+                    <p>${escapeHtml(message.text).replace(/\n/g, "<br>")}</p>
                     <time>${escapeHtml(formatDate(message.createdAt))}</time>
                   </article>
                 `
@@ -162,7 +208,7 @@
       </div>
 
       <form class="messages-compose" data-chat-compose>
-        <input type="text" name="message" placeholder="${blocked ? "Chat ist blockiert" : "Nachricht schreiben ..."}" ${blocked ? "disabled" : ""} />
+        <textarea name="message" rows="1" placeholder="${blocked ? "Chat ist blockiert" : "Nachricht schreiben…"}" ${blocked ? "disabled" : ""}></textarea>
         <button type="submit" ${blocked ? "disabled" : ""}>Senden</button>
       </form>
     `;
@@ -187,10 +233,17 @@
     const button = event.target.closest("[data-chat-id]");
     if (!button) return;
     activeChatId = button.dataset.chatId || "";
+    userSelectedChat = true;
     render();
   });
 
   threadRoot.addEventListener("click", (event) => {
+    if (event.target.closest("[data-chat-back]")) {
+      userSelectedChat = false;
+      root.classList.remove("is-thread-open");
+      return;
+    }
+
     const user = currentUser();
     if (!user) {
       if (event.target.closest("[data-message-login]")) window.AdlercodeAuth?.open?.("login");
@@ -267,6 +320,13 @@
     document.dispatchEvent(new CustomEvent("adlercode:chats-change"));
     form.reset();
     render();
+  });
+
+  threadRoot.addEventListener("keydown", (event) => {
+    const input = event.target.closest('textarea[name="message"]');
+    if (!input || event.key !== "Enter" || event.shiftKey) return;
+    event.preventDefault();
+    input.closest("[data-chat-compose]")?.requestSubmit();
   });
 
   document.addEventListener("adlercode:auth-change", render);

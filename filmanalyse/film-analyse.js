@@ -909,6 +909,16 @@
           <div class="film-detail-cover" aria-hidden="true">${film.posterUrl ? `<img src="${escapeHtml(film.posterUrl)}" alt="" />` : ""}</div>
           <h2>${escapeHtml(film.title)}</h2>
           <span>${escapeHtml(film.year)}</span>
+          <button
+            type="button"
+            class="content-discussion-button"
+            data-discussion-start
+            data-chat-type="film"
+            data-chat-title="${escapeHtml(film.title)}"
+            data-chat-film="${escapeHtml(film.title)}"
+            data-chat-href="${escapeHtml(window.location.pathname + window.location.search)}"
+            data-chat-icon="Film"
+          >Diskussion starten</button>
         </aside>
         <section class="film-detail-workspace">
           <nav class="film-tabs" aria-label="Filmanalyse Bereiche">
@@ -1217,7 +1227,7 @@
             data-message-film="${escapeHtml(meta.title || "")}"
             data-message-character="${escapeHtml(meta.characterName || meta.character || "")}"
             data-message-scope="${escapeHtml(scope)}"
-          >Nachricht senden</button>
+          >Mit Autor sprechen</button>
         ` : ""}
         ${renderPublicInteraction(key, interaction, helpfulActive)}
       </article>

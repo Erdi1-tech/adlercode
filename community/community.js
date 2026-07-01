@@ -148,7 +148,7 @@
                 data-message-analysis-key="${escapeHtml(key)}"
                 data-message-film="${escapeHtml(meta.title || "")}"
                 data-message-scope="film"
-              >Nachricht senden</button>
+              >Mit Autor sprechen</button>
             ` : ""}
           </div>
           ${renderPublicInteraction(key, interaction, helpfulActive)}
@@ -190,7 +190,7 @@
                 data-message-film="${escapeHtml(meta.title || "")}"
                 data-message-character="${escapeHtml(meta.characterName || "")}"
                 data-message-scope="character"
-              >Nachricht senden</button>
+              >Mit Autor sprechen</button>
             ` : ""}
           </div>
           ${renderPublicInteraction(key, interaction, helpfulActive)}

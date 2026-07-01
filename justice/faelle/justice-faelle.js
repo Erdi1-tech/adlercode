@@ -270,6 +270,16 @@
             </div>
           </dl>
           <p>${escapeHtml(item.description)}</p>
+          <button
+            type="button"
+            class="content-discussion-button"
+            data-discussion-start
+            data-chat-type="case"
+            data-chat-title="${escapeHtml(item.title)}"
+            data-chat-case="${escapeHtml(item.title)}"
+            data-chat-href="${escapeHtml(window.location.pathname + "#" + item.id)}"
+            data-chat-icon="Justice"
+          >Diskussion starten</button>
         </header>
 
         <section class="justice-community-average" aria-label="Community-Einschätzung">

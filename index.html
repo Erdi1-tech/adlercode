@@ -34,12 +34,21 @@
       <section id="platform" class="platform-shell reveal" aria-labelledby="platform-title" data-platform-home>
         <div class="platform-header">
           <h1 id="platform-title">ADLERCODE</h1>
-          <div class="platform-search" role="search">
-            <input id="platform-search" type="search" placeholder="Suche nach Mustern, Büchern oder Filmanalysen ..." data-platform-search />
+          <div class="platform-search global-search" role="search" data-global-search>
+            <input
+              id="platform-search"
+              type="search"
+              placeholder="Suche nach Fällen, Begriffen, Filmen, Büchern, Experten oder Kommentaren ..."
+              data-platform-search
+              data-global-search-input
+              autocomplete="off"
+              aria-controls="global-search-results"
+            />
+            <div class="global-search-suggestions" data-global-search-suggestions aria-label="Suchvorschläge"></div>
           </div>
         </div>
 
-        <section class="platform-content" aria-live="polite" data-platform-content></section>
+        <section class="platform-content global-search-content" id="global-search-results" aria-live="polite" data-platform-content data-global-search-results></section>
       </section>
 
       <section class="home-steps reveal" aria-labelledby="home-steps-title">
@@ -80,6 +89,8 @@
       </div>
     </footer>
 
+    <script src="./adlercode-terms.js?v=terms"></script>
+    <script src="./adlercode-search.js?v=mind"></script>
     <script src="./adlercode.js?v=mobile-nav"></script>
   </body>
 </html>

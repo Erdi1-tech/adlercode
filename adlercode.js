@@ -13,6 +13,7 @@ if (siteHeader) {
     ["Bücher", "buecher/index.html"],
     ["Filmanalyse", "filmanalyse/index.html"],
     ["Community", "community/index.html"],
+    ["Experten", "experten/index.html"],
     ["Adler-Kodex", "adler-kodex/index.html"],
     ["FAQ", "faq/index.html"],
     ["Kontakt", "kontakt.html"],
@@ -74,7 +75,7 @@ if (siteHeader) {
       fullLabel: "Adlercode Mind",
       status: "Aktiver Bereich",
       active: true,
-      url: "index.html",
+      url: "mind/index.html",
       contentType: "Filme",
       itemLabel: "Film",
       participantLabel: "Charaktere",
@@ -257,10 +258,14 @@ if (siteHeader) {
   authButton.className = "auth-header-button";
   authButton.type = "button";
 
-  const guestStatus = document.createElement("span");
-  guestStatus.className = "guest-status";
-  guestStatus.textContent = "Gast";
-  guestStatus.setAttribute("aria-label", "Status: Gast");
+  const accountCreateButton = document.createElement("button");
+  accountCreateButton.className = "auth-header-button auth-create-button";
+  accountCreateButton.type = "button";
+  accountCreateButton.textContent = "Konto erstellen";
+
+  const headerAuthActions = document.createElement("div");
+  headerAuthActions.className = "header-auth-actions";
+  headerAuthActions.setAttribute("aria-label", "Benutzerbereich");
 
   const profileMenu = document.createElement("div");
   profileMenu.className = "profile-menu";
@@ -314,10 +319,18 @@ if (siteHeader) {
       <button type="button" class="auth-dialog-close" data-save-prompt-close aria-label="Dialog schließen">×</button>
       <p class="eyebrow" data-save-prompt-eyebrow>Gastmodus</p>
       <h2 id="save-prompt-title" data-save-prompt-title>Analyse speichern</h2>
-      <p data-save-prompt-text>Um deine Analyse dauerhaft zu speichern und später wieder aufzurufen, benötigst du ein kostenloses Benutzerkonto.</p>
+      <p data-save-prompt-text>Um diese Funktion zu nutzen, benötigst du ein kostenloses Adlercode-Konto.</p>
+      <ul class="save-prompt-benefits" data-save-prompt-benefits>
+        <li>Analysen erstellen</li>
+        <li>Kommentare schreiben</li>
+        <li>Experten kontaktieren</li>
+        <li>Nachrichten senden</li>
+        <li>Inhalte speichern</li>
+        <li>Community nutzen</li>
+      </ul>
       <div class="save-prompt-actions">
         <button type="button" data-save-prompt-login>Anmelden</button>
-        <button type="button" data-save-prompt-register>Registrieren</button>
+        <button type="button" data-save-prompt-register>Konto erstellen</button>
         <button type="button" class="save-prompt-ghost" data-save-prompt-close>Weiter als Gast</button>
       </div>
     </section>
@@ -352,6 +365,10 @@ if (siteHeader) {
 
   headerControls.append(mobileToggle, backButton, forwardButton);
 
+  const personalNav = document.createElement("div");
+  personalNav.className = "header-personal-nav";
+  personalNav.setAttribute("aria-label", "Persönliche Navigation");
+
   const mobilePanel = document.createElement("nav");
   mobilePanel.className = "mobile-nav-panel";
   mobilePanel.id = "mobile-nav-panel";
@@ -379,7 +396,8 @@ if (siteHeader) {
   `;
 
   siteHeader.prepend(headerControls);
-  siteHeader.append(guestStatus, authButton, profileMenu, mobilePanel, authDialog, savePromptDialog, modulePreviewDialog);
+  headerAuthActions.append(personalNav, accountCreateButton, authButton);
+  siteHeader.append(headerAuthActions, profileMenu, mobilePanel, authDialog, savePromptDialog, modulePreviewDialog);
 
   const menuIcons = {
     profile: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0" /><circle cx="12" cy="7" r="4" /></svg>',
@@ -387,6 +405,12 @@ if (siteHeader) {
     messages: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" /></svg>',
     settings: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5z" /><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 0 1-4 0v-.09a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.88.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 0 1 0-4h.09A1.7 1.7 0 0 0 4.6 8.94a1.7 1.7 0 0 0-.34-1.88l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.88.34H9a1.7 1.7 0 0 0 1-1.56V3a2 2 0 0 1 4 0v.09a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.88-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c.01.02.02.04.03.06A1.7 1.7 0 0 0 21 10h.09a2 2 0 0 1 0 4H21a1.7 1.7 0 0 0-1.56 1z" /></svg>',
     logout: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="M16 17l5-5-5-5" /><path d="M21 12H9" /></svg>',
+  };
+
+  const headerIcons = {
+    notifications: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>',
+    messages: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" /></svg>',
+    profile: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0" /><circle cx="12" cy="7" r="4" /></svg>',
   };
 
   function renderHeaderNavigation() {
@@ -442,13 +466,30 @@ if (siteHeader) {
 
   function updateAuthUi() {
     const user = currentUser();
+    siteHeader.classList.toggle("is-authenticated", Boolean(user));
+    siteHeader.classList.toggle("is-guest", !user);
+    personalNav.hidden = !user;
+    personalNav.innerHTML = user
+      ? `
+        <button type="button" class="header-personal-link is-notifications" data-notification-open aria-label="Benachrichtigungen">
+          ${headerIcons.notifications}
+          <span aria-hidden="true">Benachrichtigungen</span>
+          <em data-notification-dot hidden></em>
+        </button>
+        <a class="header-personal-link is-messages" href="${authRootPath("nachrichten/index.html")}" aria-label="Nachrichten">
+          ${headerIcons.messages}
+          <span>Nachrichten</span>
+          <em data-message-dot hidden></em>
+        </a>
+      `
+      : "";
+    accountCreateButton.hidden = Boolean(user);
     authButton.classList.toggle("is-avatar", Boolean(user));
     authButton.setAttribute("aria-label", user ? "Benutzermenü öffnen" : "Anmelden");
     authButton.innerHTML = user
-      ? `<span class="auth-avatar-initial">${user.avatarInitial || avatarInitial(user.username)}</span><span class="auth-notification-badge" data-auth-notification hidden></span>`
+      ? `<span class="auth-avatar-initial">${user.avatarInitial || avatarInitial(user.username)}</span><span class="auth-profile-label">Profil</span><span class="auth-notification-badge" data-auth-notification hidden></span>`
       : "Anmelden";
     authButton.setAttribute("aria-expanded", "false");
-    guestStatus.hidden = Boolean(user);
     renderHeaderNavigation();
     document.dispatchEvent(new CustomEvent("adlercode:auth-change", { detail: { user } }));
   }
@@ -457,14 +498,19 @@ if (siteHeader) {
     const promptTitle = savePromptDialog.querySelector("[data-save-prompt-title]");
     const promptText = savePromptDialog.querySelector("[data-save-prompt-text]");
     const promptEyebrow = savePromptDialog.querySelector("[data-save-prompt-eyebrow]");
-    if (promptEyebrow) promptEyebrow.textContent = options.eyebrow || "Gastmodus";
-    if (promptTitle) promptTitle.textContent = options.title || "Analyse speichern";
+    if (promptEyebrow) promptEyebrow.textContent = options.eyebrow || "Geschützte Funktion";
+    if (promptTitle) promptTitle.textContent = options.title || "Anmeldung erforderlich";
     if (promptText) {
       promptText.textContent =
-        options.text || "Um deine Analyse dauerhaft zu speichern und später wieder aufzurufen, benötigst du ein kostenloses Benutzerkonto.";
+        options.text || "Um diese Funktion zu nutzen, benötigst du ein kostenloses Adlercode-Konto.";
     }
+    const benefits = savePromptDialog.querySelector("[data-save-prompt-benefits]");
+    if (benefits) benefits.hidden = options.hideBenefits === true;
     const guestButton = savePromptDialog.querySelector(".save-prompt-ghost");
     if (guestButton) guestButton.hidden = options.showGuest === false;
+    savePromptDialog.querySelectorAll("[data-save-prompt-login], [data-save-prompt-register]").forEach((button) => {
+      button.hidden = options.hideAuthActions === true;
+    });
     profileMenu.hidden = true;
     savePromptDialog.hidden = false;
     document.body.classList.add("is-auth-dialog-open");
@@ -570,8 +616,8 @@ if (siteHeader) {
 
   function openChatPrompt() {
     openSavePrompt({
-      title: "Nachricht senden",
-      text: "Bitte melde dich an oder registriere dich, um Nachrichten zu senden.",
+      title: "Anmeldung erforderlich",
+      text: "Um diese Funktion zu nutzen, benötigst du ein kostenloses Adlercode-Konto.",
       showGuest: false,
     });
   }
@@ -605,9 +651,25 @@ if (siteHeader) {
       context: {
         ...(existing.context || {}),
         type: existing.context?.type || context.type || "analysis",
+        title: context.title || existing.context?.title || context.caseTitle || context.analysisTitle || context.filmTitle || context.bookTitle || context.termTitle || context.expertName || "",
+        href: context.href || context.url || existing.context?.href || existing.context?.url || "",
+        icon: context.icon || existing.context?.icon || "",
         filmTitle: existing.context?.filmTitle || context.filmTitle || "",
         characterName: existing.context?.characterName || context.characterName || "",
+        caseTitle: existing.context?.caseTitle || context.caseTitle || "",
+        bookTitle: existing.context?.bookTitle || context.bookTitle || "",
+        termTitle: existing.context?.termTitle || context.termTitle || "",
+        expertName: existing.context?.expertName || context.expertName || "",
         analysisKey: existing.context?.analysisKey || context.analysisKey || "",
+        future: {
+          groupChats: false,
+          expertChats: context.type === "expert",
+          projectGroups: false,
+          analysisGroups: false,
+          mentions: false,
+          attachments: false,
+          aiAssistant: false,
+        },
       },
       createdAt: existing.createdAt || now,
       updatedAt: now,
@@ -622,6 +684,35 @@ if (siteHeader) {
     return true;
   }
 
+  function startFromContent(options = {}) {
+    const contentKey = String(options.title || options.caseTitle || options.filmTitle || options.bookTitle || options.termTitle || options.expertName || "inhalt")
+      .toLowerCase()
+      .replace(/ä/g, "ae")
+      .replace(/ö/g, "oe")
+      .replace(/ü/g, "ue")
+      .replace(/ß/g, "ss")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+    const target = normalizeParticipant(options.participant || {
+      id: options.participantId || `content-${options.type || "context"}-${contentKey}`,
+      username: options.participantName || `${options.icon || "Adlercode"} Diskussion`,
+      avatarInitial: options.participantAvatar || "A",
+    });
+    return startChat(target, {
+      type: options.type || "content",
+      title: options.title || "",
+      href: options.href || window.location.href,
+      icon: options.icon || "",
+      filmTitle: options.filmTitle || "",
+      characterName: options.characterName || "",
+      caseTitle: options.caseTitle || "",
+      bookTitle: options.bookTitle || "",
+      termTitle: options.termTitle || "",
+      expertName: options.expertName || "",
+      analysisKey: options.analysisKey || "",
+    });
+  }
+
   window.AdlercodeAuth = {
     currentUser,
     isLoggedIn: () => Boolean(currentUser()),
@@ -629,11 +720,11 @@ if (siteHeader) {
     updateProfile: updateCurrentUser,
     requireAuth(message = "") {
       if (currentUser()) return true;
-      if (message) {
-        openAuthDialog("login", message);
-      } else {
-        openSavePrompt();
-      }
+      openSavePrompt({
+        title: "Anmeldung erforderlich",
+        text: message || "Um diese Funktion zu nutzen, benötigst du ein kostenloses Adlercode-Konto.",
+        showGuest: false,
+      });
       return false;
     },
     logout() {
@@ -658,6 +749,7 @@ if (siteHeader) {
     load: loadChatStore,
     save: saveChatStore,
     startChat,
+    startFromContent,
   };
 
   function setMobileMenu(open) {
@@ -684,6 +776,48 @@ if (siteHeader) {
     } else {
       openAuthDialog("login");
     }
+  });
+
+  accountCreateButton.addEventListener("click", () => {
+    openAuthDialog("register");
+  });
+
+  personalNav.addEventListener("click", (event) => {
+    const notificationButton = event.target.closest("[data-notification-open]");
+    if (!notificationButton) return;
+    if (!currentUser()) {
+      openAuthDialog("login", "Bitte melde dich an oder registriere dich, um Benachrichtigungen zu öffnen.");
+      return;
+    }
+    openSavePrompt({
+      eyebrow: "Benachrichtigungen",
+      title: "Benachrichtigungen werden vorbereitet",
+      text: "Hier erscheinen später neue Nachrichten, Antworten, Erwähnungen und Community-Hinweise.",
+      showGuest: false,
+      hideAuthActions: true,
+    });
+  });
+
+  document.addEventListener("click", (event) => {
+    const trigger = event.target.closest("[data-discussion-start]");
+    if (!trigger) return;
+    event.preventDefault();
+    startFromContent({
+      participantId: trigger.dataset.chatParticipantId,
+      participantName: trigger.dataset.chatParticipantName,
+      participantAvatar: trigger.dataset.chatParticipantAvatar,
+      type: trigger.dataset.chatType,
+      title: trigger.dataset.chatTitle,
+      href: trigger.dataset.chatHref,
+      icon: trigger.dataset.chatIcon,
+      filmTitle: trigger.dataset.chatFilm,
+      characterName: trigger.dataset.chatCharacter,
+      caseTitle: trigger.dataset.chatCase,
+      bookTitle: trigger.dataset.chatBook,
+      termTitle: trigger.dataset.chatTerm,
+      expertName: trigger.dataset.chatExpert,
+      analysisKey: trigger.dataset.chatAnalysisKey,
+    });
   });
 
   mobilePanel.addEventListener("click", (event) => {
@@ -1015,7 +1149,9 @@ if (platformHome) {
     }
   });
 
-  platformSearch?.addEventListener("input", (event) => renderPlatformSearch(event.target.value));
+  if (!window.ADLERCODE_GLOBAL_SEARCH?.ready) {
+    platformSearch?.addEventListener("input", (event) => renderPlatformSearch(event.target.value));
+  }
 }
 
 document.querySelectorAll("[data-origin-trigger]").forEach((trigger) => {

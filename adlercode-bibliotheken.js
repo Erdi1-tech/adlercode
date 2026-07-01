@@ -281,6 +281,18 @@ if (adlerLibrariesRoot) {
           <span>${escapeHtml(item.library)}${item.group && item.group !== item.library ? " / " + escapeHtml(item.group) : ""}</span>
           <h1>${escapeHtml(item.title)}</h1>
           <p>${formatDefinition(item.description)}</p>
+          <button
+            type="button"
+            class="content-discussion-button"
+            data-discussion-start
+            data-chat-type="${item.library === "Bücher" ? "book" : item.library === "Filmanalyse" ? "film" : "term"}"
+            data-chat-title="${escapeHtml(item.title)}"
+            data-chat-term="${escapeHtml(item.library === "Musterbibliothek" ? item.title : "")}"
+            data-chat-book="${escapeHtml(item.library === "Bücher" ? item.title : "")}"
+            data-chat-film="${escapeHtml(item.library === "Filmanalyse" ? item.title : "")}"
+            data-chat-href="${escapeHtml(window.location.pathname + window.location.search)}"
+            data-chat-icon="${escapeHtml(item.library === "Bücher" ? "Buch" : item.library === "Filmanalyse" ? "Film" : "Begriff")}"
+          >Diskussion starten</button>
         </header>
         ${renderRelatedTerms(item)}
       </article>
