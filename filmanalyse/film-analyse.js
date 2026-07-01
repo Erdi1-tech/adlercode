@@ -13,6 +13,10 @@
   let ratingStore = loadRatingStore();
   let editingFilmRating = false;
   let editingCharacterRating = false;
+  let editingRatingTypes = new Set();
+  let saveFeedback = null;
+  let saveFeedbackTimer = null;
+  let publishFeedback = null;
   const sharedTerms = window.ADLERCODE_TERMS || null;
   const infoTerms = {};
   const infoLabels = [
@@ -352,6 +356,87 @@
     return form.querySelector("[data-rating-visibility]:checked")?.value === "public" ? "public" : "private";
   }
 
+  function stableJson(value) {
+    return JSON.stringify(value || {});
+  }
+
+  function savedDistributionSnapshot(savedRating) {
+    if (!savedRating) return "";
+    return stableJson({
+      values: savedRating.values || {},
+      reason: savedRating.reason || "",
+      visibility: savedRating.visibility === "public" ? "public" : "private",
+    });
+  }
+
+  function currentDistributionSnapshot(form) {
+    return stableJson({
+      values: collectDistribution(form),
+      reason: collectReason(form),
+      visibility: collectVisibility(form),
+    });
+  }
+
+  function savedMoralSnapshot(savedMoral) {
+    if (!savedMoral) return "";
+    return stableJson({
+      level: savedMoral.level || "",
+      visibility: savedMoral.visibility === "public" ? "public" : "private",
+    });
+  }
+
+  function currentMoralSnapshot(form) {
+    return stableJson({
+      level: form.querySelector("[data-moral-level]:checked")?.value || "",
+      visibility: collectVisibility(form),
+    });
+  }
+
+  function formHasSavedState(form, currentSnapshot) {
+    return Boolean(form.dataset.savedSnapshot && form.dataset.savedSnapshot === currentSnapshot);
+  }
+
+  function setSaveButtonState(button, { canSave, isSaved, dirty, editing }) {
+    if (!button) return;
+    button.disabled = !canSave || isSaved;
+    button.classList.toggle("is-saved", isSaved);
+    button.innerHTML = isSaved
+      ? '<span aria-hidden="true">✓</span> Gespeichert'
+      : dirty || editing
+        ? "Änderungen speichern"
+        : "Bewertung speichern";
+  }
+
+  function renderSaveFeedback(type) {
+    if (saveFeedback?.type !== type) return "";
+    return '<p class="film-rating-feedback" role="status">✅ Bewertung erfolgreich gespeichert.</p>';
+  }
+
+  function clearSaveFeedback(form) {
+    if (!saveFeedback) return;
+    const type = form?.dataset.ratingType || (form?.hasAttribute("data-moral-analysis") ? "moral" : "");
+    if (saveFeedback.type !== type) return;
+    if (saveFeedbackTimer) {
+      clearTimeout(saveFeedbackTimer);
+      saveFeedbackTimer = null;
+    }
+    saveFeedback = null;
+    detailRoot?.querySelectorAll(".film-rating-feedback").forEach((feedback) => feedback.remove());
+  }
+
+  function showTemporarySaveFeedback(type) {
+    if (saveFeedbackTimer) {
+      clearTimeout(saveFeedbackTimer);
+      saveFeedbackTimer = null;
+    }
+    saveFeedback = { type };
+    saveFeedbackTimer = window.setTimeout(() => {
+      if (saveFeedback?.type === type) saveFeedback = null;
+      detailRoot?.querySelectorAll(".film-rating-feedback").forEach((feedback) => feedback.remove());
+      saveFeedbackTimer = null;
+    }, 2500);
+  }
+
   function dominantLabel(values) {
     return Object.entries(values || {}).reduce((dominant, item) => (item[1] > dominant[1] ? item : dominant), ["", -1])[0];
   }
@@ -429,6 +514,65 @@
 
   function isPublicAnalysis(item) {
     return item?.visibility === "public" || item?.["film-narrative"]?.visibility === "public" || item?.moral?.visibility === "public" || item?.["film-system"]?.visibility === "public";
+  }
+
+  function publicAnalysisDomId(key) {
+    return `analyse-${String(key || "").replace(/[^a-zA-Z0-9_-]+/g, "-")}`;
+  }
+
+  function currentPublicAnalysisTarget(scope = activeView === "character" ? "character" : "film") {
+    const key = scope === "character" ? characterRatingKey() : filmRatingKey();
+    const item = key ? ratingStore[key] : null;
+    return {
+      key,
+      item,
+      hasSavedAnalysis: scope === "character"
+        ? Boolean(item?.values)
+        : Boolean(item?.["film-narrative"] || item?.moral || item?.["film-system"]),
+      isPublished: Boolean(item && isPublicAnalysis(item)),
+    };
+  }
+
+  function publicAnalysisPageUrl(scope, key) {
+    const film = activeFilm();
+    const characterItem = activeCharacter();
+    if (!film) return "#";
+    const params = new URLSearchParams({ film: film.id });
+    if (scope === "character" && characterItem?.id) params.set("character", characterItem.id);
+    return `?${params.toString()}#${publicAnalysisDomId(key)}`;
+  }
+
+  function publicCommunityUrl(key) {
+    return `../community/?analysis=${encodeURIComponent(key)}#${publicAnalysisDomId(key)}`;
+  }
+
+  function publishCurrentAnalysis(scope = activeView === "character" ? "character" : "film") {
+    const target = currentPublicAnalysisTarget(scope);
+    if (!target.key || !target.item || !target.hasSavedAnalysis) return null;
+
+    if (scope === "character") {
+      ratingStore[target.key] = {
+        ...target.item,
+        visibility: "public",
+        savedAt: target.item.savedAt || new Date().toISOString(),
+      };
+    } else {
+      ratingStore[target.key] = {
+        ...target.item,
+        visibility: "public",
+        "film-narrative": target.item["film-narrative"]
+          ? { ...target.item["film-narrative"], visibility: "public" }
+          : target.item["film-narrative"],
+        moral: target.item.moral ? { ...target.item.moral, visibility: "public" } : target.item.moral,
+        "film-system": target.item["film-system"]
+          ? { ...target.item["film-system"], visibility: "public" }
+          : target.item["film-system"],
+      };
+    }
+
+    saveRatingStore();
+    publishFeedback = { key: target.key, scope };
+    return target.key;
   }
 
   function publicAnalysesForFilm(film = activeFilm()) {
@@ -779,16 +923,13 @@
 
   function renderAnalysisTab() {
     const ratings = filmRatings();
-    const isCompleteFilmRating = Boolean(ratings["film-narrative"] && ratings.moral && ratings["film-system"]);
-    const showResultOnly = isCompleteFilmRating && !editingFilmRating;
     return `
       <section class="film-analysis-tab" aria-label="Filmanalyse">
+        ${renderAnalysisProgress(ratings)}
+        ${renderRatingSection("Narrativanalyse", "film-narrative", ["Adler-Perspektive", "Empathen-Perspektive", "Narzissten-Perspektive", "Psychopathen-Perspektive", "Covert-Perspektive"], "Warum hast du diese Narrativanalyse vergeben?", "", ratings["film-narrative"])}
+        ${renderMoralSection(ratings.moral)}
+        ${renderRatingSection("Systemanalyse", "film-system", ["Adlersystem", "Schlangensystem", "Psychopath-System", "Covertsystem"], "Warum hast du diese Systemanalyse vergeben?", "", ratings["film-system"])}
         ${renderFilmResult(ratings)}
-        ${showResultOnly ? "" : `
-          ${renderRatingSection("Narrativanalyse", "film-narrative", ["Adler-Perspektive", "Empathen-Perspektive", "Narzissten-Perspektive", "Psychopathen-Perspektive", "Covert-Perspektive"], "Warum hast du diese Narrativanalyse vergeben?", "", ratings["film-narrative"])}
-          ${renderMoralSection(ratings.moral)}
-          ${renderRatingSection("Systemanalyse", "film-system", ["Adlersystem", "Schlangensystem", "Psychopath-System", "Covertsystem"], "Warum hast du diese Systemanalyse vergeben?", "", ratings["film-system"])}
-        `}
         ${renderPublicAnalysesPreview("film")}
       </section>
     `;
@@ -809,6 +950,28 @@
     `;
   }
 
+  function renderAnalysisProgress(ratings) {
+    const steps = [
+      ["Narrativ", Boolean(ratings["film-narrative"])],
+      ["Moral", Boolean(ratings.moral)],
+      ["System", Boolean(ratings["film-system"])],
+    ];
+    return `
+      <div class="film-analysis-progress" aria-label="Fortschritt der Filmanalyse">
+        ${steps.map(([label, done]) => `<span class="${done ? "is-done" : ""}">${escapeHtml(label)} ${done ? "✓" : "□"}</span>`).join("")}
+      </div>
+    `;
+  }
+
+  function renderCharacterProgress(result) {
+    return `
+      <div class="film-analysis-progress" aria-label="Fortschritt der Charakteranalyse">
+        <span class="${result ? "is-done" : ""}">Charakter ${result ? "✓" : "□"}</span>
+        <span class="${result?.reason ? "is-done" : ""}">Kommentar ${result?.reason ? "✓" : "□"}</span>
+      </div>
+    `;
+  }
+
   function renderCharacterReview(film, characterItem) {
     detailRoot.innerHTML = `
       <article class="film-character-page">
@@ -825,9 +988,9 @@
             <p>${escapeHtml(characterItem.role)}</p>
           </div>
         </header>
-        ${characterRating(film, characterItem) && !editingCharacterRating
-          ? renderCharacterResult(characterRating(film, characterItem))
-          : renderRatingSection("NPC-Programmanalyse", "character-program", ["Empath", "Narzisst", "Psychopath", "Covert"], "Warum hast du diese Bewertung vergeben?", "", characterRating(film, characterItem))}
+        ${renderCharacterProgress(characterRating(film, characterItem))}
+        ${renderRatingSection("NPC-Programmanalyse", "character-program", ["Empath", "Narzisst", "Psychopath", "Covert"], "Warum hast du diese Bewertung vergeben?", "", characterRating(film, characterItem))}
+        ${renderCharacterResult(characterRating(film, characterItem))}
         ${renderPublicAnalysesPreview("character")}
       </article>
     `;
@@ -836,8 +999,12 @@
   function renderRatingSection(title, type, categories, reasonPlaceholder, description = "", savedRating = null) {
     const titleInfoKey = infoKeyByLabel[title];
     const values = savedRating?.values || {};
+    const savedSnapshot = savedDistributionSnapshot(savedRating);
+    const isEditing = editingRatingTypes.has(type);
+    const isLocked = Boolean(savedRating) && !isEditing;
+    const disabledAttribute = isLocked ? "disabled" : "";
     return `
-      <form class="film-rating-form" data-rating-type="${escapeHtml(type)}">
+      <form class="film-rating-form" data-rating-type="${escapeHtml(type)}" data-saved-snapshot="${escapeHtml(savedSnapshot)}" data-editing="${isEditing ? "true" : "false"}" data-locked="${isLocked ? "true" : "false"}">
         <header class="film-rating-header">
           ${renderInfoTitle(title, titleInfoKey)}
           ${description ? `<p>${escapeHtml(description)}</p>` : ""}
@@ -846,7 +1013,7 @@
           ${categories.map((category) => `
             <div class="film-rating-row">
               <div class="film-rating-row-head">${renderTermLabel(category)}<output data-rating-output="${escapeHtml(category)}">0 %</output></div>
-              <input type="range" min="0" max="100" step="5" value="${Number(values[category] || 0)}" aria-label="${escapeHtml(category)}" data-rating-slider="${escapeHtml(category)}" />
+              <input type="range" min="0" max="100" step="5" value="${Number(values[category] || 0)}" aria-label="${escapeHtml(category)}" data-rating-slider="${escapeHtml(category)}" ${disabledAttribute} />
             </div>
           `).join("")}
         </div>
@@ -856,29 +1023,40 @@
         </div>
         <label class="film-rating-reason">
           <span>Begründung</span>
-          <textarea rows="4" placeholder="${escapeHtml(reasonPlaceholder)}">${escapeHtml(savedRating?.reason || "")}</textarea>
+          <textarea rows="4" placeholder="${escapeHtml(reasonPlaceholder)}" ${disabledAttribute}>${escapeHtml(savedRating?.reason || "")}</textarea>
         </label>
         <fieldset class="film-rating-visibility">
           <legend>Sichtbarkeit</legend>
-          <label><input type="radio" name="${escapeHtml(type)}-visibility" value="private" data-rating-visibility ${savedRating?.visibility !== "public" ? "checked" : ""} /> Privat speichern</label>
-          <label><input type="radio" name="${escapeHtml(type)}-visibility" value="public" data-rating-visibility ${savedRating?.visibility === "public" ? "checked" : ""} /> Öffentlich veröffentlichen</label>
+          <label><input type="radio" name="${escapeHtml(type)}-visibility" value="private" data-rating-visibility ${savedRating?.visibility !== "public" ? "checked" : ""} ${disabledAttribute} /> Privat speichern</label>
+          <label><input type="radio" name="${escapeHtml(type)}-visibility" value="public" data-rating-visibility ${savedRating?.visibility === "public" ? "checked" : ""} ${disabledAttribute} /> Öffentlich veröffentlichen</label>
         </fieldset>
-        <button type="button" class="film-rating-save" disabled data-rating-save>Bewertung speichern</button>
+        ${renderSaveFeedback(type)}
+        <div class="film-rating-actions">
+          <button type="button" class="film-rating-save" disabled data-rating-save>Bewertung speichern</button>
+          ${isLocked ? `<button type="button" class="film-rating-edit-inline" data-edit-rating-type="${escapeHtml(type)}">Bearbeiten</button>` : ""}
+        </div>
         <div class="film-community-placeholder" data-community-rating-ready="false">Community-Durchschnitt wird vorbereitet.</div>
       </form>
     `;
   }
 
   function renderCharacterResult(result) {
+    if (!result) return "";
+    if (editingRatingTypes.has("character-program")) return "";
     const dominant = dominantLabel(result.values);
     return `
       <section class="film-rating-result" data-character-result>
-        <p>Deine Charakteranalyse</p>
+        <h3>Deine vollständige Analyse</h3>
+        <article>
+          <h4>Charakteranalyse</h4>
+          ${renderDistributionList(result.values)}
+          <strong>Dominantes Profil: ${escapeHtml(profileLabel(dominant))}</strong>
+        </article>
+        <article>
+          <h4>Kommentar</h4>
+          ${result.reason ? `<blockquote>${escapeHtml(result.reason)}</blockquote>` : "<p>Kein Kommentar gespeichert.</p>"}
+        </article>
         <span class="film-result-visibility">${result.visibility === "public" ? "Öffentlich" : "Privat"}</span>
-        ${renderDistributionList(result.values)}
-        <strong>Dominantes Profil: ${escapeHtml(profileLabel(dominant))}</strong>
-        ${result.reason ? `<blockquote>${escapeHtml(result.reason)}</blockquote>` : ""}
-        <button type="button" class="film-result-edit" data-edit-character-rating>Bewertung bearbeiten</button>
       </section>
     `;
   }
@@ -887,39 +1065,41 @@
     const hasNarrative = Boolean(ratings["film-narrative"]);
     const hasMoral = Boolean(ratings.moral);
     const hasSystem = Boolean(ratings["film-system"]);
-    if (!hasNarrative && !hasMoral && !hasSystem) return "";
+    const hasOpenEdit = ["film-narrative", "moral", "film-system"].some((type) => editingRatingTypes.has(type));
+    if (hasOpenEdit) return "";
+    if (!hasNarrative || !hasMoral || !hasSystem) return "";
     const reasons = [ratings["film-narrative"]?.reason, ratings["film-system"]?.reason].filter(Boolean);
     return `
       <section class="film-rating-result film-analysis-result" data-film-result>
-        <p>Deine Filmanalyse</p>
+        <h3>Deine vollständige Analyse</h3>
         <span class="film-result-visibility">${ratings.visibility === "public" ? "Öffentlich" : "Privat"}</span>
-        ${hasNarrative ? `
-          <article>
-            <h4>Narrativanalyse</h4>
-            ${renderDistributionList(ratings["film-narrative"].values)}
-            <strong>Dominantes Narrativ: ${escapeHtml(dominantLabel(ratings["film-narrative"].values))}</strong>
-          </article>
-        ` : ""}
-        ${hasMoral ? `
-          <article>
-            <h4>Moralanalyse</h4>
-            <strong>Moralebene: ${escapeHtml(moralLabel(ratings.moral.level))}</strong>
-          </article>
-        ` : ""}
-        ${hasSystem ? `
-          <article>
-            <h4>Systemanalyse</h4>
-            ${renderDistributionList(ratings["film-system"].values)}
-            <strong>Dominantes System: ${escapeHtml(dominantLabel(ratings["film-system"].values))}</strong>
-          </article>
-        ` : ""}
-        ${reasons.length ? `<blockquote>${reasons.map(escapeHtml).join("<br />")}</blockquote>` : ""}
-        <button type="button" class="film-result-edit" data-edit-film-rating>Bewertung bearbeiten</button>
+        <article>
+          <h4>Narrativanalyse</h4>
+          ${renderDistributionList(ratings["film-narrative"].values)}
+          <strong>Dominantes Narrativ: ${escapeHtml(dominantLabel(ratings["film-narrative"].values))}</strong>
+        </article>
+        <article>
+          <h4>Moralanalyse</h4>
+          <strong>Moralebene: ${escapeHtml(moralLabel(ratings.moral.level))}</strong>
+        </article>
+        <article>
+          <h4>Systemanalyse</h4>
+          ${renderDistributionList(ratings["film-system"].values)}
+          <strong>Dominantes System: ${escapeHtml(dominantLabel(ratings["film-system"].values))}</strong>
+        </article>
+        <article>
+          <h4>Kommentar</h4>
+          ${reasons.length ? `<blockquote>${reasons.map(escapeHtml).join("<br />")}</blockquote>` : "<p>Kein Kommentar gespeichert.</p>"}
+        </article>
       </section>
     `;
   }
 
   function renderMoralSection(savedMoral = null) {
+    const savedSnapshot = savedMoralSnapshot(savedMoral);
+    const isEditing = editingRatingTypes.has("moral");
+    const isLocked = Boolean(savedMoral) && !isEditing;
+    const disabledAttribute = isLocked ? "disabled" : "";
     const levels = [
       { value: "empath", label: "Empath", icon: "🟢" },
       { value: "narzisst", label: "Narzisst", icon: "🟡" },
@@ -928,7 +1108,7 @@
     ];
 
     return `
-      <form class="film-rating-form film-moral-form" data-moral-analysis data-community-rating-ready="false" data-comments-ready="false" data-ai-analysis-ready="false" data-pattern-links-ready="false" data-book-links-ready="false">
+      <form class="film-rating-form film-moral-form" data-moral-analysis data-saved-snapshot="${escapeHtml(savedSnapshot)}" data-editing="${isEditing ? "true" : "false"}" data-locked="${isLocked ? "true" : "false"}" data-community-rating-ready="false" data-comments-ready="false" data-ai-analysis-ready="false" data-pattern-links-ready="false" data-book-links-ready="false">
         <header class="film-rating-header">
           ${renderInfoTitle("Moralanalyse", "moralAnalysis")}
         </header>
@@ -936,7 +1116,7 @@
           ${levels.map((level, index) => `
             <div class="film-moral-option">
               <label class="film-moral-choice">
-                <input type="radio" name="film-moral-level" value="${escapeHtml(level.value)}" ${savedMoral?.level === level.value ? "checked" : ""} data-moral-level />
+                <input type="radio" name="film-moral-level" value="${escapeHtml(level.value)}" ${savedMoral?.level === level.value ? "checked" : ""} data-moral-level ${disabledAttribute} />
                 <span aria-hidden="true">${escapeHtml(level.icon)}</span>
                 <strong>${sharedTerms?.renderLink(level.label) || escapeHtml(level.label)}</strong>
               </label>
@@ -947,10 +1127,14 @@
         </div>
         <fieldset class="film-rating-visibility">
           <legend>Sichtbarkeit</legend>
-          <label><input type="radio" name="film-moral-visibility" value="private" data-rating-visibility ${savedMoral?.visibility !== "public" ? "checked" : ""} /> Privat speichern</label>
-          <label><input type="radio" name="film-moral-visibility" value="public" data-rating-visibility ${savedMoral?.visibility === "public" ? "checked" : ""} /> Öffentlich veröffentlichen</label>
+          <label><input type="radio" name="film-moral-visibility" value="private" data-rating-visibility ${savedMoral?.visibility !== "public" ? "checked" : ""} ${disabledAttribute} /> Privat speichern</label>
+          <label><input type="radio" name="film-moral-visibility" value="public" data-rating-visibility ${savedMoral?.visibility === "public" ? "checked" : ""} ${disabledAttribute} /> Öffentlich veröffentlichen</label>
         </fieldset>
-        <button type="button" class="film-rating-save" disabled data-moral-save>Einordnung speichern</button>
+        ${renderSaveFeedback("moral")}
+        <div class="film-rating-actions">
+          <button type="button" class="film-rating-save" disabled data-moral-save>Einordnung speichern</button>
+          ${isLocked ? '<button type="button" class="film-rating-edit-inline" data-edit-rating-type="moral">Bearbeiten</button>' : ""}
+        </div>
         <div class="film-community-placeholder" data-community-rating-ready="false">Community-Durchschnitt wird vorbereitet.</div>
       </form>
     `;
@@ -958,6 +1142,8 @@
 
   function renderPublicAnalysesPreview(scope = "film") {
     const analyses = scope === "character" ? publicAnalysesForCharacter() : publicAnalysesForFilm();
+    const target = currentPublicAnalysisTarget(scope);
+    const showPublishedState = target.isPublished && target.key;
     const emptyText = scope === "character"
       ? "Noch keine öffentlichen Charakteranalysen vorhanden."
       : "Noch keine öffentlichen Filmanalysen vorhanden.";
@@ -976,7 +1162,21 @@
               <p>Sei der Erste und veröffentliche deine Analyse.</p>
             </div>
           `}
-        <button type="button" class="film-community-publish" data-community-publish>${buttonText}</button>
+        ${publishFeedback?.key === target.key ? `
+          <div class="film-community-publish-feedback" role="status">
+            <strong>✅ Analyse erfolgreich veröffentlicht.</strong>
+            <span>Deine Analyse ist jetzt öffentlich und für andere Nutzer sichtbar.</span>
+          </div>
+        ` : ""}
+        <div class="film-community-publish-actions">
+          <button type="button" class="film-community-publish ${showPublishedState ? "is-published" : ""}" data-community-publish ${showPublishedState ? "disabled" : ""}>
+            ${showPublishedState ? "Veröffentlicht" : buttonText}
+          </button>
+          ${showPublishedState ? `
+            <a class="film-community-secondary" href="${escapeHtml(publicAnalysisPageUrl(scope, target.key))}">👁 Analyse ansehen</a>
+            <a class="film-community-secondary" href="${escapeHtml(publicCommunityUrl(target.key))}">💬 Zur Community</a>
+          ` : ""}
+        </div>
       </section>
     `;
   }
@@ -992,7 +1192,7 @@
     const currentUser = window.AdlercodeAuth?.currentUser?.();
     const helpfulActive = currentUser?.id && interaction.helpfulBy.includes(currentUser.id);
     return `
-      <article class="film-community-analysis" data-public-analysis-key="${escapeHtml(key)}">
+      <article class="film-community-analysis" id="${escapeHtml(publicAnalysisDomId(key))}" data-public-analysis-key="${escapeHtml(key)}">
         <header>
           <strong>${escapeHtml(author)}</strong>
           <span>${escapeHtml(formatDate(latestRatingDate(item)))}</span>
@@ -1071,16 +1271,40 @@
 
     form.querySelector("[data-rating-total]").textContent = `${total} %`;
     form.querySelector("[data-rating-remaining]").textContent = `${Math.max(remaining, 0)} %`;
-    form.querySelector("[data-rating-save]").disabled = total !== 100;
+    const currentSnapshot = currentDistributionSnapshot(form);
+    const isLocked = form.dataset.locked === "true";
+    const isEditing = form.dataset.editing === "true";
+    const isSaved = isLocked || (!isEditing && formHasSavedState(form, currentSnapshot));
+    const hasUnsavedChange = Boolean(form.dataset.savedSnapshot) ? form.dataset.savedSnapshot !== currentSnapshot : true;
+    const dirty = Boolean(form.dataset.savedSnapshot) && hasUnsavedChange;
+    setSaveButtonState(form.querySelector("[data-rating-save]"), {
+      canSave: total === 100 && (!isEditing || hasUnsavedChange),
+      isSaved,
+      dirty,
+      editing: isEditing,
+    });
     form.classList.toggle("is-complete", total === 100);
+    form.classList.toggle("is-saved", isSaved);
     form.classList.remove("is-over");
   }
 
   function updateMoralForm(form) {
     const selected = form.querySelector("[data-moral-level]:checked");
     const saveButton = form.querySelector("[data-moral-save]");
-    if (saveButton) saveButton.disabled = !selected;
+    const currentSnapshot = currentMoralSnapshot(form);
+    const isLocked = form.dataset.locked === "true";
+    const isEditing = form.dataset.editing === "true";
+    const isSaved = isLocked || (!isEditing && formHasSavedState(form, currentSnapshot));
+    const hasUnsavedChange = Boolean(form.dataset.savedSnapshot) ? form.dataset.savedSnapshot !== currentSnapshot : true;
+    const dirty = Boolean(form.dataset.savedSnapshot) && hasUnsavedChange;
+    setSaveButtonState(saveButton, {
+      canSave: Boolean(selected) && (!isEditing || hasUnsavedChange),
+      isSaved,
+      dirty,
+      editing: isEditing,
+    });
     form.classList.toggle("is-complete", Boolean(selected));
+    form.classList.toggle("is-saved", isSaved);
     if (selected) form.dataset.selectedMoralLevel = selected.value;
   }
 
@@ -1120,6 +1344,8 @@
       activeCharacterId = characterButton.dataset.characterId || "";
       activeView = "character";
       editingCharacterRating = false;
+      editingRatingTypes.clear();
+      saveFeedback = null;
       render();
       return;
     }
@@ -1134,6 +1360,8 @@
       isAnalysisMode = true;
       editingFilmRating = false;
       editingCharacterRating = false;
+      editingRatingTypes.clear();
+      saveFeedback = null;
       render();
     }
   });
@@ -1144,6 +1372,19 @@
       event.preventDefault();
       event.stopPropagation();
       toggleInfoFlyout(infoButton);
+      return;
+    }
+
+    const editRatingType = event.target.closest("[data-edit-rating-type]");
+    if (editRatingType) {
+      editingRatingTypes.add(editRatingType.dataset.editRatingType || "");
+      if (editRatingType.dataset.editRatingType === "character-program") {
+        editingCharacterRating = true;
+      } else {
+        editingFilmRating = true;
+      }
+      saveFeedback = null;
+      render();
       return;
     }
 
@@ -1217,11 +1458,16 @@
     const communityPublish = event.target.closest("[data-community-publish]");
     if (communityPublish) {
       if (window.AdlercodeAuth && !window.AdlercodeAuth.requireAuth()) return;
-      if (activeView === "character") {
-        editingCharacterRating = true;
-      } else {
-        activeTab = "analysis";
-        editingFilmRating = true;
+      const scope = activeView === "character" ? "character" : "film";
+      const publishedKey = publishCurrentAnalysis(scope);
+      if (!publishedKey) {
+        if (activeView === "character") {
+          editingCharacterRating = true;
+          editingRatingTypes.add("character-program");
+        } else {
+          activeTab = "analysis";
+          editingFilmRating = true;
+        }
       }
       render();
       return;
@@ -1247,15 +1493,18 @@
         const key = characterRatingKey();
         if (!key) return;
         ratingStore[key] = { ...payload, ownerId: user.id, author, visibility: payload.visibility, meta: characterMeta() };
+        editingRatingTypes.delete(type);
         editingCharacterRating = false;
       } else {
         const key = filmRatingKey();
         if (!key) return;
         ratingStore[key] = { ...filmRatings(), ownerId: user.id, author, visibility: payload.visibility, meta: filmMeta(), [type]: payload };
+        editingRatingTypes.delete(type);
         editingFilmRating = false;
       }
 
       saveRatingStore();
+      showTemporarySaveFeedback(type);
       render();
       return;
     }
@@ -1283,7 +1532,9 @@
         },
       };
       editingFilmRating = false;
+      editingRatingTypes.delete("moral");
       saveRatingStore();
+      showTemporarySaveFeedback("moral");
       render();
       return;
     }
@@ -1293,6 +1544,8 @@
       activeTab = tabButton.dataset.filmTab || "analysis";
       activeView = "film";
       editingFilmRating = false;
+      editingRatingTypes.clear();
+      saveFeedback = null;
       render();
       return;
     }
@@ -1302,6 +1555,8 @@
       activeCharacterId = characterButton.dataset.characterId || "";
       activeView = "character";
       editingCharacterRating = false;
+      editingRatingTypes.clear();
+      saveFeedback = null;
       render();
       return;
     }
@@ -1314,6 +1569,8 @@
       activeCharacterId = "";
       editingFilmRating = false;
       editingCharacterRating = false;
+      editingRatingTypes.clear();
+      saveFeedback = null;
       render();
       return;
     }
@@ -1322,6 +1579,8 @@
       activeView = "film";
       activeTab = "characters";
       editingCharacterRating = false;
+      editingRatingTypes.clear();
+      saveFeedback = null;
       render();
     }
   });
@@ -1367,17 +1626,38 @@
 
   detailRoot?.addEventListener("input", (event) => {
     const slider = event.target.closest("[data-rating-slider]");
-    if (!slider) return;
-    clampDistributionSlider(slider);
-    const form = slider.closest("[data-rating-type]");
-    if (form) updateRatingForm(form);
+    const reason = event.target.closest(".film-rating-reason textarea");
+    if (!slider && !reason) return;
+    const form = (slider || reason).closest("[data-rating-type]");
+    if (!form) return;
+    if (slider) clampDistributionSlider(slider);
+    clearSaveFeedback(form);
+    updateRatingForm(form);
   });
 
   detailRoot?.addEventListener("change", (event) => {
+    const ratingVisibility = event.target.closest("[data-rating-visibility]");
+    if (ratingVisibility) {
+      const ratingForm = ratingVisibility.closest("[data-rating-type]");
+      const moralForm = ratingVisibility.closest("[data-moral-analysis]");
+      if (ratingForm) {
+        clearSaveFeedback(ratingForm);
+        updateRatingForm(ratingForm);
+      }
+      if (moralForm) {
+        clearSaveFeedback(moralForm);
+        updateMoralForm(moralForm);
+      }
+      return;
+    }
+
     const moralLevel = event.target.closest("[data-moral-level]");
     if (!moralLevel) return;
     const form = moralLevel.closest("[data-moral-analysis]");
-    if (form) updateMoralForm(form);
+    if (form) {
+      clearSaveFeedback(form);
+      updateMoralForm(form);
+    }
   });
 
   searchInput?.addEventListener("input", debounce((event) => {

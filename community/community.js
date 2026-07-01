@@ -92,6 +92,10 @@
     return `../filmanalyse/?${new URLSearchParams({ film: meta.id, character: meta.characterId }).toString()}`;
   }
 
+  function publicAnalysisDomId(key) {
+    return `analyse-${String(key || "").replace(/[^a-zA-Z0-9_-]+/g, "-")}`;
+  }
+
   function publicAnalyses() {
     return Object.entries(loadStore())
       .map(([key, item]) => ({ key, item, type: key.startsWith("character:") ? "character" : "film" }))
@@ -118,7 +122,7 @@
     const helpfulActive = currentUser?.id && interaction.helpfulBy.includes(currentUser.id);
     const canMessage = item.author?.id && item.author.id !== currentUser?.id;
     return `
-      <article class="community-analysis-card" data-public-analysis-key="${escapeHtml(key)}">
+      <article class="community-analysis-card" id="${escapeHtml(publicAnalysisDomId(key))}" data-public-analysis-key="${escapeHtml(key)}">
         <div class="community-analysis-media" aria-hidden="true">${meta.posterUrl ? `<img src="${escapeHtml(meta.posterUrl)}" alt="" loading="lazy" />` : ""}</div>
         <div class="community-analysis-body">
           <header>
@@ -160,7 +164,7 @@
     const helpfulActive = currentUser?.id && interaction.helpfulBy.includes(currentUser.id);
     const canMessage = item.author?.id && item.author.id !== currentUser?.id;
     return `
-      <article class="community-analysis-card" data-public-analysis-key="${escapeHtml(key)}">
+      <article class="community-analysis-card" id="${escapeHtml(publicAnalysisDomId(key))}" data-public-analysis-key="${escapeHtml(key)}">
         <div class="community-analysis-media is-character" aria-hidden="true">${meta.imageUrl ? `<img src="${escapeHtml(meta.imageUrl)}" alt="" loading="lazy" />` : ""}</div>
         <div class="community-analysis-body">
           <header>

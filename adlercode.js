@@ -30,12 +30,54 @@ if (siteHeader) {
     "Suchfunktion",
     "Bücher und Ressourcen",
   ];
+  const analysisEngine = {
+    id: "adlercode-analysis-engine",
+    title: "Adlercode Analyse-Engine",
+    steps: [
+      {
+        id: "situation",
+        title: "Situation",
+        prompt: "Was ist passiert?",
+        description: "Kurze Beschreibung der Situation.",
+      },
+      {
+        id: "narrative",
+        title: "Narrativanalyse",
+        prompt: "Welche Geschichten, Perspektiven oder Narrative entstehen?",
+      },
+      {
+        id: "participants",
+        title: "Charakter- bzw. Beteiligtenanalyse",
+        prompt: "Welche Personen oder Rollen kommen vor?",
+      },
+      {
+        id: "system",
+        title: "Systemanalyse",
+        prompt: "Welche Systeme, Regeln oder Strukturen beeinflussen die Situation?",
+      },
+      {
+        id: "moral",
+        title: "Moralanalyse",
+        prompt: "Welche Verantwortung tragen die Beteiligten? Welche moralischen Konflikte entstehen?",
+      },
+      {
+        id: "community",
+        title: "Community",
+        prompt: "Öffentliche Analysen, Kommentare und Diskussionen.",
+      },
+    ],
+  };
   const platformModules = [
     {
       id: "mind",
-      label: "Adlercode Mind",
+      label: "Mind",
+      fullLabel: "Adlercode Mind",
       status: "Aktiver Bereich",
       active: true,
+      url: "index.html",
+      contentType: "Filme",
+      itemLabel: "Film",
+      participantLabel: "Charaktere",
       focus: [
         "Musterbibliothek",
         "Filmanalyse",
@@ -49,61 +91,105 @@ if (siteHeader) {
         "Bücher",
       ],
       sharedFeatures: platformSharedFeatures,
+      analysisEngine,
     },
     {
       id: "justice",
-      label: "Adlercode Justice",
-      status: "Bald verfügbar",
+      label: "Justice",
+      fullLabel: "Adlercode Justice",
+      status: "Bereich",
+      url: "justice/index.html",
+      contentType: "Fälle",
+      itemLabel: "Fall",
+      participantLabel: "Beteiligte",
       focus: ["Verantwortung", "Recht", "Konflikte", "Gerichtsfälle", "Moral", "Rollen", "Narrative", "Systemanalyse"],
+      previewText:
+        "Dieser Bereich wird vorbereitet. Hier werden später Fälle, Rollen, Verantwortung, Narrative und Systeme mit dem Adlercode-Framework analysiert.",
       sharedFeatures: platformSharedFeatures,
+      analysisEngine,
     },
     {
       id: "politics",
-      label: "Adlercode Politics",
+      label: "Politics",
+      fullLabel: "Adlercode Politics",
       status: "Bald verfügbar",
+      contentType: "Politische Ereignisse",
+      itemLabel: "Ereignis",
+      participantLabel: "Akteure",
       focus: ["Politik", "Macht", "Propaganda", "Gesellschaft", "Ideologien", "Systeme", "Narrative"],
+      previewText:
+        "Dieser Bereich wird vorbereitet. Hier werden später politische Ereignisse, Akteure, Machtstrukturen, Narrative und Systeme analysiert.",
       sharedFeatures: platformSharedFeatures,
+      analysisEngine,
     },
     {
       id: "business",
-      label: "Adlercode Business",
+      label: "Business",
+      fullLabel: "Adlercode Business",
       status: "Bald verfügbar",
+      contentType: "Unternehmensfälle",
+      itemLabel: "Unternehmensfall",
+      participantLabel: "Mitarbeiter und Führungskräfte",
       focus: ["Unternehmen", "Führung", "Organisation", "Strategie", "Kommunikation", "Verhandlungen"],
+      previewText:
+        "Dieser Bereich wird vorbereitet. Hier werden später Unternehmen, Führung, Organisation, Kommunikation und Strategien analysiert.",
       sharedFeatures: platformSharedFeatures,
+      analysisEngine,
     },
     {
       id: "relationships",
-      label: "Adlercode Relationships",
+      label: "Relationships",
+      fullLabel: "Adlercode Relationships",
       status: "Bald verfügbar",
+      contentType: "Beziehungssituationen",
+      itemLabel: "Beziehungssituation",
+      participantLabel: "Partner, Familie und Umfeld",
       focus: ["Partnerschaft", "Familie", "Kommunikation", "Freundschaften", "Konflikte", "Bindung"],
+      previewText:
+        "Dieser Bereich wird vorbereitet. Hier werden später Beziehungssituationen, Kommunikation, Rollen, Grenzen und Dynamiken analysiert.",
       sharedFeatures: platformSharedFeatures,
+      analysisEngine,
     },
     {
       id: "health",
-      label: "Adlercode Health",
+      label: "Health",
+      fullLabel: "Adlercode Health",
       status: "Bald verfügbar",
+      contentType: "Gesundheitssituationen",
+      itemLabel: "Gesundheitssituation",
+      participantLabel: "Patient, Umfeld und Routinen",
       focus: ["Gesundheit", "Nervensystem", "Schlaf", "Ernährung", "Bewegung", "Stress", "Gewohnheiten", "Prävention"],
+      previewText:
+        "Dieser Bereich wird vorbereitet. Hier werden später Gesundheitssituationen, Gewohnheiten, Stress, Nervensystem und Umfeldmuster analysiert.",
       sharedFeatures: platformSharedFeatures,
+      analysisEngine,
     },
     {
       id: "academy",
-      label: "Adlercode Academy",
+      label: "Academy",
+      fullLabel: "Adlercode Academy",
       status: "Bald verfügbar",
+      contentType: "Lerninhalte",
+      itemLabel: "Lerninhalt",
+      participantLabel: "Autoren, Experten und Lernende",
       focus: ["Bücher", "Modelle", "Kurse", "Videos", "Experten", "Lernen"],
+      previewText:
+        "Dieser Bereich wird vorbereitet. Hier werden später Bücher, Modelle, Kurse, Videos und Lernmaterialien gebündelt.",
       sharedFeatures: platformSharedFeatures,
-    },
-    {
-      id: "philosophy",
-      label: "Adlercode Philosophy",
-      status: "Bald verfügbar",
-      focus: ["Weltbilder", "Religionen", "Ethik", "Philosophie", "Spiritualität", "Sinnfragen", "Bewusstsein"],
-      note: "Analyse unterschiedlicher Denkmodelle und Weltanschauungen, nicht die Vertretung einer bestimmten Überzeugung.",
-      sharedFeatures: platformSharedFeatures,
+      analysisEngine,
     },
   ];
   const authStorageKey = "adlercode-auth-v1";
   const authUsersKey = "adlercode-auth-users-v1";
   const chatStorageKey = "adlercode-chats-v1";
+
+  function currentModuleId() {
+    return window.location.pathname.includes("/justice/") ? "justice" : "mind";
+  }
+
+  function isCurrentModule(module) {
+    return module.id === currentModuleId();
+  }
 
   function readJson(key, fallback) {
     try {
@@ -249,6 +335,23 @@ if (siteHeader) {
     <span></span>
   `;
 
+  const headerControls = document.createElement("div");
+  headerControls.className = "header-controls";
+
+  const backButton = document.createElement("button");
+  backButton.className = "header-history-button";
+  backButton.type = "button";
+  backButton.setAttribute("aria-label", "Zurück");
+  backButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg>';
+
+  const forwardButton = document.createElement("button");
+  forwardButton.className = "header-history-button";
+  forwardButton.type = "button";
+  forwardButton.setAttribute("aria-label", "Vorwärts");
+  forwardButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>';
+
+  headerControls.append(mobileToggle, backButton, forwardButton);
+
   const mobilePanel = document.createElement("nav");
   mobilePanel.className = "mobile-nav-panel";
   mobilePanel.id = "mobile-nav-panel";
@@ -258,8 +361,25 @@ if (siteHeader) {
     <div data-mobile-nav-links></div>
   `;
 
-  siteHeader.prepend(mobileToggle);
-  siteHeader.append(guestStatus, authButton, profileMenu, mobilePanel, authDialog, savePromptDialog);
+  const modulePreviewDialog = document.createElement("div");
+  modulePreviewDialog.className = "module-preview-dialog";
+  modulePreviewDialog.hidden = true;
+  modulePreviewDialog.setAttribute("role", "dialog");
+  modulePreviewDialog.setAttribute("aria-modal", "true");
+  modulePreviewDialog.setAttribute("aria-labelledby", "module-preview-title");
+  modulePreviewDialog.innerHTML = `
+    <div class="module-preview-backdrop" data-module-preview-close></div>
+    <section class="module-preview-panel" aria-describedby="module-preview-text">
+      <button class="module-preview-close" type="button" data-module-preview-close aria-label="Vorschau schließen">×</button>
+      <p class="module-preview-eyebrow">Bald verfügbar</p>
+      <h2 id="module-preview-title" data-module-preview-title>Adlercode</h2>
+      <p id="module-preview-text" data-module-preview-text></p>
+      <button class="module-preview-primary" type="button" data-module-preview-close>Zurück zu Adlercode Mind</button>
+    </section>
+  `;
+
+  siteHeader.prepend(headerControls);
+  siteHeader.append(guestStatus, authButton, profileMenu, mobilePanel, authDialog, savePromptDialog, modulePreviewDialog);
 
   const menuIcons = {
     profile: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0" /><circle cx="12" cy="7" r="4" /></svg>',
@@ -272,12 +392,16 @@ if (siteHeader) {
   function renderHeaderNavigation() {
     const links = navItems.map(([label, path]) => `<a href="${new URL(path, siteRoot).href}">${label}</a>`).join("");
     const moduleLinks = platformModules
-      .map((module) => `
-        <button type="button" class="module-nav-option${module.active ? " is-active" : ""}" data-module-id="${module.id}" ${module.active ? 'aria-current="true"' : "disabled"}>
+      .map((module) => {
+        const activeModule = isCurrentModule(module);
+        const status = activeModule ? "Aktiver Bereich" : module.status;
+        return `
+        <button type="button" class="module-nav-option${activeModule ? " is-active" : " is-preview"}" data-module-id="${module.id}" ${activeModule ? 'aria-current="true"' : ""}>
           <span>${module.label}</span>
-          <small>${module.status}</small>
+          <small>${status}</small>
         </button>
-      `)
+      `;
+      })
       .join("");
     const modulesMenu = `
       <details class="module-nav">
@@ -349,6 +473,26 @@ if (siteHeader) {
   function closeSavePrompt() {
     savePromptDialog.hidden = true;
     document.body.classList.remove("is-auth-dialog-open");
+  }
+
+  function closeModuleMenus() {
+    siteHeader.querySelectorAll(".module-nav[open]").forEach((menu) => menu.removeAttribute("open"));
+  }
+
+  function openModulePreview(module) {
+    const title = modulePreviewDialog.querySelector("[data-module-preview-title]");
+    const text = modulePreviewDialog.querySelector("[data-module-preview-text]");
+    if (title) title.textContent = module.fullLabel || `Adlercode ${module.label}`;
+    if (text) text.textContent = module.previewText || "Dieser Bereich wird vorbereitet.";
+    profileMenu.hidden = true;
+    modulePreviewDialog.hidden = false;
+    document.body.classList.add("is-module-preview-open");
+    modulePreviewDialog.querySelector(".module-preview-primary")?.focus();
+  }
+
+  function closeModulePreview() {
+    modulePreviewDialog.hidden = true;
+    document.body.classList.remove("is-module-preview-open");
   }
 
   function openAuthDialog(mode = "login", message = "") {
@@ -502,7 +646,11 @@ if (siteHeader) {
   window.AdlercodePlatform = {
     modules: platformModules,
     sharedFeatures: platformSharedFeatures,
-    activeModule: platformModules.find((module) => module.active) || platformModules[0],
+    analysisEngine,
+    activeModule: platformModules.find((module) => isCurrentModule(module)) || platformModules[0],
+    getModule(id) {
+      return platformModules.find((module) => module.id === id) || null;
+    },
   };
 
   window.AdlercodeChat = {
@@ -522,6 +670,14 @@ if (siteHeader) {
     setMobileMenu(!siteHeader.classList.contains("is-mobile-nav-open"));
   });
 
+  backButton.addEventListener("click", () => {
+    window.history.back();
+  });
+
+  forwardButton.addEventListener("click", () => {
+    window.history.forward();
+  });
+
   authButton.addEventListener("click", () => {
     if (currentUser()) {
       toggleProfileMenu();
@@ -534,6 +690,25 @@ if (siteHeader) {
     if (event.target.closest("a") || event.target.closest("[data-platform-library]")) {
       setMobileMenu(false);
     }
+  });
+
+  siteHeader.addEventListener("click", (event) => {
+    const moduleButton = event.target.closest("[data-module-id]");
+    if (!moduleButton) return;
+    event.preventDefault();
+    const module = platformModules.find((item) => item.id === moduleButton.dataset.moduleId);
+    closeModuleMenus();
+    setMobileMenu(false);
+    if (!module || isCurrentModule(module)) return;
+    if (module.url) {
+      window.location.href = new URL(module.url, siteRoot).href;
+      return;
+    }
+    openModulePreview(module);
+  });
+
+  modulePreviewDialog.addEventListener("click", (event) => {
+    if (event.target.closest("[data-module-preview-close]")) closeModulePreview();
   });
 
   document.addEventListener("click", (event) => {
@@ -638,6 +813,7 @@ if (siteHeader) {
       profileMenu.hidden = true;
       closeAuthDialog();
       closeSavePrompt();
+      closeModulePreview();
     }
   });
 
