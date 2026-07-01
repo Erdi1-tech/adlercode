@@ -174,6 +174,10 @@ if (adlerLibrariesRoot) {
     return String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
   }
 
+  function formatDefinition(value) {
+    return escapeHtml(value).replace(/\n/g, "<br />");
+  }
+
   function activeLibrary() {
     return libraries.find((item) => item.id === activeLibraryId) || null;
   }
@@ -188,6 +192,35 @@ if (adlerLibrariesRoot) {
       );
       return [...directEntries, ...itemEntries, ...folderEntries];
     });
+  }
+
+  function findEntryByTitle(title) {
+    const cleanTitle = String(title || "").trim().toLowerCase();
+    return allEntries(activeLibrary()).find((item) => item.title.toLowerCase() === cleanTitle) || null;
+  }
+
+  function renderRelatedTerms(item) {
+    const explicitRelated = (item.related || [])
+      .map((title) => ({ title, entry: findEntryByTitle(title) }))
+      .filter((related) => related.entry);
+    const categoryRelated = explicitRelated.length
+      ? []
+      : allEntries(activeLibrary())
+        .filter((entryItem) => entryItem.category === item.category && entryItem.id !== item.id && entryItem.id.indexOf("bereich-") !== 0)
+        .slice(0, 5)
+        .map((entryItem) => ({ title: entryItem.title, entry: entryItem }));
+    const relatedItems = explicitRelated.length ? explicitRelated : categoryRelated;
+
+    if (!relatedItems.length) return "";
+
+    return `
+      <div class="library-related-terms" aria-label="Verknüpfte Begriffe">
+        <p>Verknüpfte Begriffe</p>
+        <div>
+          ${relatedItems.map((related) => `<button type="button" data-entry-id="${related.entry.id}">${escapeHtml(related.title)}</button>`).join("")}
+        </div>
+      </div>
+    `;
   }
 
   function setMenu(open) {
@@ -217,7 +250,7 @@ if (adlerLibrariesRoot) {
 
         return `
           <details class="library-tree-category">
-            <summary data-entry-id="${group.overview?.id || ""}">${escapeHtml(group.title)}</summary>
+            <summary>${escapeHtml(group.title)}</summary>
             ${directItems ? `<div class="library-tree-items">${directItems}</div>` : ""}
             ${folderItems}
           </details>
@@ -247,8 +280,9 @@ if (adlerLibrariesRoot) {
         <header class="library-document-header">
           <span>${escapeHtml(item.library)}${item.group && item.group !== item.library ? " / " + escapeHtml(item.group) : ""}</span>
           <h1>${escapeHtml(item.title)}</h1>
-          <p>${escapeHtml(item.description)}</p>
+          <p>${formatDefinition(item.description)}</p>
         </header>
+        ${renderRelatedTerms(item)}
       </article>
     `;
   }
@@ -312,6 +346,16 @@ if (adlerLibrariesRoot) {
     const libraryButton = event.target.closest("[data-library-id]");
 
     if (entryButton) {
+      if (entryButton.matches("summary")) {
+        event.preventDefault();
+        const categoryDetails = entryButton.closest("details");
+        const shouldOpen = !categoryDetails?.hasAttribute("open");
+        selectEntry(entryButton.dataset.entryId, entryButton.dataset.libraryId);
+        if (categoryDetails) {
+          categoryDetails.toggleAttribute("open", shouldOpen);
+        }
+        return;
+      }
       selectEntry(entryButton.dataset.entryId, entryButton.dataset.libraryId);
       return;
     }

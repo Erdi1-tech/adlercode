@@ -12,17 +12,98 @@ if (siteHeader) {
     ["Musterbibliothek", "musterbibliothek/index.html"],
     ["Bücher", "buecher/index.html"],
     ["Filmanalyse", "filmanalyse/index.html"],
-    ["Meine Analysen", "meine-analysen/index.html"],
     ["Community", "community/index.html"],
-    ["Nachrichten", "nachrichten/index.html"],
     ["Adler-Kodex", "adler-kodex/index.html"],
     ["FAQ", "faq/index.html"],
     ["Kontakt", "kontakt.html"],
   ];
+  const platformSharedFeatures = [
+    "Benutzerkonten",
+    "Musterbibliothek",
+    "Analysen",
+    "Community",
+    "Profile",
+    "Kommentare",
+    "Nachrichten",
+    "Öffentliche Analysen",
+    "Private Analysen",
+    "Suchfunktion",
+    "Bücher und Ressourcen",
+  ];
+  const platformModules = [
+    {
+      id: "mind",
+      label: "Adlercode Mind",
+      status: "Aktiver Bereich",
+      active: true,
+      focus: [
+        "Musterbibliothek",
+        "Filmanalyse",
+        "Charakteranalyse",
+        "Persönlichkeitsprofile",
+        "Narrative",
+        "Moral",
+        "Identität",
+        "Wahrnehmung",
+        "Community",
+        "Bücher",
+      ],
+      sharedFeatures: platformSharedFeatures,
+    },
+    {
+      id: "justice",
+      label: "Adlercode Justice",
+      status: "Bald verfügbar",
+      focus: ["Verantwortung", "Recht", "Konflikte", "Gerichtsfälle", "Moral", "Rollen", "Narrative", "Systemanalyse"],
+      sharedFeatures: platformSharedFeatures,
+    },
+    {
+      id: "politics",
+      label: "Adlercode Politics",
+      status: "Bald verfügbar",
+      focus: ["Politik", "Macht", "Propaganda", "Gesellschaft", "Ideologien", "Systeme", "Narrative"],
+      sharedFeatures: platformSharedFeatures,
+    },
+    {
+      id: "business",
+      label: "Adlercode Business",
+      status: "Bald verfügbar",
+      focus: ["Unternehmen", "Führung", "Organisation", "Strategie", "Kommunikation", "Verhandlungen"],
+      sharedFeatures: platformSharedFeatures,
+    },
+    {
+      id: "relationships",
+      label: "Adlercode Relationships",
+      status: "Bald verfügbar",
+      focus: ["Partnerschaft", "Familie", "Kommunikation", "Freundschaften", "Konflikte", "Bindung"],
+      sharedFeatures: platformSharedFeatures,
+    },
+    {
+      id: "health",
+      label: "Adlercode Health",
+      status: "Bald verfügbar",
+      focus: ["Gesundheit", "Nervensystem", "Schlaf", "Ernährung", "Bewegung", "Stress", "Gewohnheiten", "Prävention"],
+      sharedFeatures: platformSharedFeatures,
+    },
+    {
+      id: "academy",
+      label: "Adlercode Academy",
+      status: "Bald verfügbar",
+      focus: ["Bücher", "Modelle", "Kurse", "Videos", "Experten", "Lernen"],
+      sharedFeatures: platformSharedFeatures,
+    },
+    {
+      id: "philosophy",
+      label: "Adlercode Philosophy",
+      status: "Bald verfügbar",
+      focus: ["Weltbilder", "Religionen", "Ethik", "Philosophie", "Spiritualität", "Sinnfragen", "Bewusstsein"],
+      note: "Analyse unterschiedlicher Denkmodelle und Weltanschauungen, nicht die Vertretung einer bestimmten Überzeugung.",
+      sharedFeatures: platformSharedFeatures,
+    },
+  ];
   const authStorageKey = "adlercode-auth-v1";
   const authUsersKey = "adlercode-auth-users-v1";
   const chatStorageKey = "adlercode-chats-v1";
-  const personalNavLabels = new Set(["Meine Analysen", "Nachrichten"]);
 
   function readJson(key, fallback) {
     try {
@@ -175,41 +256,48 @@ if (siteHeader) {
   mobilePanel.innerHTML = `
     <p>NAVIGATION</p>
     <div data-mobile-nav-links></div>
-    <button type="button" data-auth-open>Anmelden</button>
   `;
 
   siteHeader.prepend(mobileToggle);
   siteHeader.append(guestStatus, authButton, profileMenu, mobilePanel, authDialog, savePromptDialog);
 
-  function unreadMessageCount(user = currentUser()) {
-    if (!user?.id) return 0;
-    const store = readJson(chatStorageKey, { chats: {} });
-    return Object.values(store.chats || {}).reduce((sum, chat) => {
-      if (!chat.participantIds?.includes(user.id) || (chat.deletedFor || []).includes(user.id)) return sum;
-      return sum + (chat.messages || []).filter((message) => message.senderId !== user.id && !(message.readBy || []).includes(user.id)).length;
-    }, 0);
-  }
-
-  function navLabel(label, user = currentUser()) {
-    if (label !== "Nachrichten") return label;
-    const count = unreadMessageCount(user);
-    return count ? `Nachrichten (${count})` : "Nachrichten";
-  }
+  const menuIcons = {
+    profile: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0" /><circle cx="12" cy="7" r="4" /></svg>',
+    analyses: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16" /><path d="M6 16V8" /><path d="M12 16V4" /><path d="M18 16v-6" /></svg>',
+    messages: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" /></svg>',
+    settings: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5z" /><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 0 1-4 0v-.09a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.88.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 0 1 0-4h.09A1.7 1.7 0 0 0 4.6 8.94a1.7 1.7 0 0 0-.34-1.88l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.88.34H9a1.7 1.7 0 0 0 1-1.56V3a2 2 0 0 1 4 0v.09a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.88-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c.01.02.02.04.03.06A1.7 1.7 0 0 0 21 10h.09a2 2 0 0 1 0 4H21a1.7 1.7 0 0 0-1.56 1z" /></svg>',
+    logout: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="M16 17l5-5-5-5" /><path d="M21 12H9" /></svg>',
+  };
 
   function renderHeaderNavigation() {
-    const user = currentUser();
-    const visibleItems = navItems.filter(([label]) => user || !personalNavLabels.has(label));
-    const links = visibleItems.map(([label, path]) => `<a href="${new URL(path, siteRoot).href}">${navLabel(label, user)}</a>`).join("");
+    const links = navItems.map(([label, path]) => `<a href="${new URL(path, siteRoot).href}">${label}</a>`).join("");
+    const moduleLinks = platformModules
+      .map((module) => `
+        <button type="button" class="module-nav-option${module.active ? " is-active" : ""}" data-module-id="${module.id}" ${module.active ? 'aria-current="true"' : "disabled"}>
+          <span>${module.label}</span>
+          <small>${module.status}</small>
+        </button>
+      `)
+      .join("");
+    const modulesMenu = `
+      <details class="module-nav">
+        <summary>Bereiche</summary>
+        <div class="module-nav-menu" aria-label="Zukünftige Adlercode Bereiche">
+          ${moduleLinks}
+        </div>
+      </details>
+    `;
     const desktopNav = siteHeader.querySelector(".site-nav");
     const mobileLinks = mobilePanel.querySelector("[data-mobile-nav-links]");
-    if (desktopNav) desktopNav.innerHTML = links;
-    if (mobileLinks) mobileLinks.innerHTML = links;
+    if (desktopNav) desktopNav.innerHTML = `${links}${modulesMenu}`;
+    if (mobileLinks) mobileLinks.innerHTML = `${links}${modulesMenu}`;
     profileMenu.innerHTML = `
-      <a href="${authRootPath("nachrichten/index.html")}">${navLabel("Nachrichten", user)}</a>
-      <a href="${authRootPath("profil/index.html")}">Profil</a>
-      <a href="${authRootPath("meine-analysen/index.html")}">Meine Analysen</a>
-      <a href="${authRootPath("profil/index.html#einstellungen")}">Einstellungen</a>
-      <button type="button" data-auth-logout>Abmelden</button>
+      <a href="${authRootPath("profil/index.html")}">${menuIcons.profile}<span>Profil</span></a>
+      <a href="${authRootPath("meine-analysen/index.html")}">${menuIcons.analyses}<span>Meine Analysen</span></a>
+      <a href="${authRootPath("nachrichten/index.html")}">${menuIcons.messages}<span>Nachrichten</span></a>
+      <a href="${authRootPath("profil/index.html#einstellungen")}">${menuIcons.settings}<span>Einstellungen</span></a>
+      <hr aria-hidden="true" />
+      <button type="button" data-auth-logout>${menuIcons.logout}<span>Abmelden</span></button>
     `;
   }
 
@@ -230,9 +318,12 @@ if (siteHeader) {
 
   function updateAuthUi() {
     const user = currentUser();
-    authButton.textContent = user ? "Profil" : "Anmelden";
+    authButton.classList.toggle("is-avatar", Boolean(user));
+    authButton.setAttribute("aria-label", user ? "Benutzermenü öffnen" : "Anmelden");
+    authButton.innerHTML = user
+      ? `<span class="auth-avatar-initial">${user.avatarInitial || avatarInitial(user.username)}</span><span class="auth-notification-badge" data-auth-notification hidden></span>`
+      : "Anmelden";
     authButton.setAttribute("aria-expanded", "false");
-    mobilePanel.querySelector("[data-auth-open]").textContent = user ? "Profil" : "Anmelden";
     guestStatus.hidden = Boolean(user);
     renderHeaderNavigation();
     document.dispatchEvent(new CustomEvent("adlercode:auth-change", { detail: { user } }));
@@ -408,6 +499,12 @@ if (siteHeader) {
     },
   };
 
+  window.AdlercodePlatform = {
+    modules: platformModules,
+    sharedFeatures: platformSharedFeatures,
+    activeModule: platformModules.find((module) => module.active) || platformModules[0],
+  };
+
   window.AdlercodeChat = {
     storageKey: chatStorageKey,
     load: loadChatStore,
@@ -434,16 +531,6 @@ if (siteHeader) {
   });
 
   mobilePanel.addEventListener("click", (event) => {
-    const authOpen = event.target.closest("[data-auth-open]");
-    if (authOpen) {
-      if (currentUser()) {
-        window.location.href = authRootPath("profil/index.html");
-      } else {
-        openAuthDialog("login");
-      }
-      setMobileMenu(false);
-      return;
-    }
     if (event.target.closest("a") || event.target.closest("[data-platform-library]")) {
       setMobileMenu(false);
     }
