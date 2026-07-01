@@ -91,6 +91,11 @@
     setText("[data-profile-member-since]", formatDate(user.createdAt) || "2026");
     setText(".profile-avatar", user.avatarInitial || "A");
     setText("[data-profile-description]", user.description || "Persönliches Zentrum für Analysen, Einstellungen und zukünftige Community-Funktionen.");
+    setText("[data-profile-account-name]", user.username || user.name || user.email || "Adlercode Nutzer");
+    setText(
+      "[data-profile-account-description]",
+      user.description || "Beschreibe kurz, welche Themen und Analysen dich interessieren.",
+    );
     if (editForm) {
       editForm.elements.username.value = user.username || user.name || "";
       editForm.elements.description.value = user.description || "";
@@ -184,6 +189,8 @@
     setText("[data-profile-name]", updated.username || "Adlercode Nutzer");
     setText(".profile-avatar", updated.avatarInitial || "A");
     setText("[data-profile-description]", updated.description || "Persönliches Zentrum für Analysen, Einstellungen und zukünftige Community-Funktionen.");
+    setText("[data-profile-account-name]", updated.username || "Adlercode Nutzer");
+    setText("[data-profile-account-description]", updated.description || "Beschreibe kurz, welche Themen und Analysen dich interessieren.");
     if (editMessage) editMessage.textContent = "Profil gespeichert.";
     editForm.hidden = true;
   });

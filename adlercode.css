@@ -2481,15 +2481,16 @@ a.justice-dashboard-card:focus-visible,
 }
 
 .justice-list-card,
+.justice-summary-list,
 .justice-timeline {
   display: grid;
   gap: 0;
   padding: 10px;
 }
 
-.justice-list-card a {
+.justice-list-card a,
+.justice-summary-list a {
   display: grid;
-  grid-template-columns: 92px minmax(0, 1fr);
   gap: 12px;
   padding: 13px;
   border-radius: 12px;
@@ -2498,13 +2499,25 @@ a.justice-dashboard-card:focus-visible,
     color 180ms ease;
 }
 
+.justice-list-card a {
+  grid-template-columns: 92px minmax(0, 1fr);
+}
+
+.justice-summary-list a {
+  grid-template-columns: 74px minmax(0, 1fr);
+  align-items: start;
+}
+
 .justice-list-card a:hover,
-.justice-list-card a:focus-visible {
+.justice-list-card a:focus-visible,
+.justice-summary-list a:hover,
+.justice-summary-list a:focus-visible {
   background: rgba(200, 164, 91, 0.08);
   outline: none;
 }
 
 .justice-list-card span,
+.justice-summary-list span,
 .justice-community-widget > span,
 .justice-recommendation-card span {
   color: rgba(244, 217, 155, 0.72);
@@ -2515,10 +2528,20 @@ a.justice-dashboard-card:focus-visible,
 }
 
 .justice-list-card strong,
+.justice-summary-list strong,
 .justice-recommendation-card strong {
   color: rgba(244, 241, 234, 0.88);
   font-size: 0.94rem;
   font-weight: 640;
+}
+
+.justice-summary-list small {
+  grid-column: 2;
+  margin-top: -6px;
+  color: rgba(244, 241, 234, 0.5);
+  font-size: 0.78rem;
+  font-weight: 520;
+  line-height: 1.45;
 }
 
 .justice-timeline {
@@ -5180,6 +5203,20 @@ a.justice-dashboard-card:focus-visible,
   padding: 22px 24px;
 }
 
+.profile-avatar-wrap {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+}
+
+.profile-avatar-wrap > span {
+  color: rgba(244, 241, 234, 0.48);
+  font-size: 0.72rem;
+  font-weight: 720;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .profile-avatar {
   width: 84px;
   aspect-ratio: 1;
@@ -5341,6 +5378,154 @@ a.justice-dashboard-card:focus-visible,
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+.profile-account-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.profile-account-grid article,
+.profile-rank-card {
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.028);
+}
+
+.profile-account-grid article {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+  min-height: 142px;
+  padding: 16px;
+}
+
+.profile-account-grid span,
+.profile-rank-card span,
+.profile-demo-list span {
+  color: rgba(244, 217, 155, 0.72);
+  font-size: 0.72rem;
+  font-weight: 760;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.profile-account-grid strong,
+.profile-rank-card strong {
+  color: rgba(244, 241, 234, 0.92);
+  font-size: 1rem;
+  font-weight: 680;
+  line-height: 1.3;
+}
+
+.profile-account-grid p,
+.profile-rank-card p,
+.profile-demo-list small {
+  margin: 0;
+  color: rgba(244, 241, 234, 0.56);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.profile-split-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.profile-demo-list {
+  display: grid;
+  gap: 8px;
+}
+
+.profile-demo-list a {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 6px 12px;
+  min-height: 58px;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.065);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.022);
+  padding: 11px 12px;
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    transform 180ms ease;
+}
+
+.profile-demo-list a:hover,
+.profile-demo-list a:focus-visible {
+  border-color: rgba(200, 164, 91, 0.25);
+  background: rgba(200, 164, 91, 0.07);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.profile-demo-list strong {
+  min-width: 0;
+  overflow: hidden;
+  color: rgba(244, 241, 234, 0.88);
+  font-size: 0.88rem;
+  font-weight: 620;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-demo-list small {
+  grid-column: 2;
+  margin-top: -4px;
+}
+
+.profile-rank-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.78fr);
+  gap: 18px;
+  padding: 18px;
+}
+
+.profile-rank-card > div {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+}
+
+.profile-rank-card dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.profile-rank-card dl div {
+  display: grid;
+  gap: 5px;
+  border: 1px solid rgba(244, 241, 234, 0.075);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.024);
+  padding: 12px;
+}
+
+.profile-rank-card dt,
+.profile-rank-card dd {
+  margin: 0;
+}
+
+.profile-rank-card dt {
+  color: rgba(244, 241, 234, 0.46);
+  font-size: 0.68rem;
+  font-weight: 740;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.profile-rank-card dd {
+  color: rgba(244, 217, 155, 0.9);
+  font-size: 1.36rem;
+  font-weight: 720;
+  line-height: 1;
 }
 
 .profile-action-row a,

@@ -23,7 +23,10 @@
     <main class="library-page-shell profile-shell">
       <section class="library-page profile-page" aria-labelledby="profile-title" data-profile-page>
         <header class="profile-hero">
-          <div class="profile-avatar" aria-hidden="true">A</div>
+          <div class="profile-avatar-wrap">
+            <div class="profile-avatar" aria-hidden="true">A</div>
+            <span>Profilbild</span>
+          </div>
           <div>
             <p class="eyebrow">Profil</p>
             <h1 id="profile-title">Adlercode Profil</h1>
@@ -47,7 +50,7 @@
         </header>
 
         <section class="profile-section" aria-labelledby="profile-stats-title">
-          <h2 id="profile-stats-title">Statistiken</h2>
+          <h2 id="profile-stats-title">Aktivitätsübersicht</h2>
           <div class="profile-stats-grid">
             <article>
               <span data-stat-films>0</span>
@@ -68,13 +71,71 @@
           </div>
         </section>
 
+        <section class="profile-section" aria-labelledby="profile-account-title">
+          <h2 id="profile-account-title">Benutzerkonto</h2>
+          <div class="profile-account-grid">
+            <article>
+              <span>Profilbild</span>
+              <strong>Platzhalter aktiv</strong>
+              <p>Später kann hier ein echtes Profilbild hochgeladen werden.</p>
+            </article>
+            <article>
+              <span>Benutzername</span>
+              <strong data-profile-account-name>Adlercode Nutzer</strong>
+              <p>Wird öffentlich bei Analysen, Kommentaren und Community-Beiträgen angezeigt.</p>
+            </article>
+            <article>
+              <span>Kurzbeschreibung</span>
+              <strong>Vorbereitet</strong>
+              <p data-profile-account-description>Beschreibe kurz, welche Themen und Analysen dich interessieren.</p>
+            </article>
+          </div>
+        </section>
+
         <section class="profile-section" aria-labelledby="profile-analyses-title">
           <h2 id="profile-analyses-title">Meine Analysen</h2>
           <div class="profile-action-row">
             <a href="../meine-analysen/">Filmanalysen</a>
             <a href="../meine-analysen/?tab=characters">Charakteranalysen</a>
+            <a href="../justice/dashboard/">Justice Dashboard</a>
           </div>
           <div class="profile-recent-analyses" data-profile-recent hidden></div>
+        </section>
+
+        <div class="profile-split-grid">
+          <section class="profile-section" aria-labelledby="profile-saved-title">
+            <h2 id="profile-saved-title">Gespeicherte Fälle</h2>
+            <div class="profile-demo-list">
+              <a href="../justice/faelle/#arbeitsplatzkonflikt"><span>Arbeit</span><strong>Arbeitsplatzkonflikt</strong><small>zuletzt geöffnet</small></a>
+              <a href="../justice/faelle/#mobbing-am-arbeitsplatz"><span>Arbeit</span><strong>Mobbing am Arbeitsplatz</strong><small>41 Bewertungen</small></a>
+              <a href="../justice/faelle/#sorgerechtskonflikt"><span>Familie</span><strong>Sorgerechtskonflikt</strong><small>gespeichert</small></a>
+            </div>
+          </section>
+
+          <section class="profile-section" aria-labelledby="profile-comments-title">
+            <h2 id="profile-comments-title">Eigene Kommentare</h2>
+            <div class="profile-demo-list">
+              <a href="../justice/community/"><span>Kommentar</span><strong>„Das wirkt wie ein Konflikt um Anerkennung.“</strong><small>Arbeitsplatzkonflikt</small></a>
+              <a href="../justice/community/"><span>Kommentar</span><strong>„Die Rollenklärung fehlt hier völlig.“</strong><small>Sorgerechtskonflikt</small></a>
+              <a href="../justice/community/"><span>Kommentar</span><strong>„Wichtig ist die Trennung von Recht und Moral.“</strong><small>Erbstreit</small></a>
+            </div>
+          </section>
+        </div>
+
+        <section class="profile-section" aria-labelledby="profile-rank-title">
+          <h2 id="profile-rank-title">Community-Rang</h2>
+          <div class="profile-rank-card">
+            <div>
+              <span>Rang</span>
+              <strong>Aktiver Mitwirkender</strong>
+              <p>Demo-Rang für hilfreiche Analysen, Kommentare und Community-Bewertungen.</p>
+            </div>
+            <dl>
+              <div><dt>Hilfreiche Beiträge</dt><dd>28</dd></div>
+              <div><dt>Bewertungen</dt><dd>57</dd></div>
+              <div><dt>Diskussionen</dt><dd>14</dd></div>
+            </dl>
+          </div>
         </section>
 
         <section class="profile-section" id="einstellungen" aria-labelledby="profile-settings-title">
