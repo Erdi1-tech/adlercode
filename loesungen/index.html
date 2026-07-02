@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lösungsbank | Adlercode</title>
+    <meta name="description" content="Adlercode Lösungsbank verbindet Probleme mit Ressourcen, Werkzeugen, Experten und Projekten." />
+    <link rel="stylesheet" href="../adlercode.css" />
+  </head>
+  <body>
+    <header class="site-header" aria-label="Adlercode Navigation">
+      <a class="brand" href="../index.html" aria-label="Adlercode Startseite"><span class="brand-mark" aria-hidden="true"></span><span>Adlercode</span></a>
+      <nav class="site-nav" aria-label="Hauptnavigation"></nav>
+    </header>
+    <main class="platform-bank-shell" data-platform-bank="solutions">
+      <section class="platform-bank-hero">
+        <p class="eyebrow">Lösungsbank</p>
+        <h1>Lösungsbank</h1>
+        <p>Nicht nur Probleme erklären, sondern Lösungsschritte, Ressourcen, Werkzeuge und Experten verbinden.</p>
+        <input type="search" placeholder="Lösungen oder Probleme suchen ..." data-bank-search />
+      </section>
+      <section class="platform-bank-layout">
+        <aside class="resource-filter-panel">
+          <label>Kategorie<select data-bank-category></select></label>
+          <label>Status<select data-bank-status></select></label>
+          <button type="button" data-bank-reset>Filter zurücksetzen</button>
+        </aside>
+        <section class="platform-bank-results">
+          <header class="resource-results-head"><h2>Lösungen</h2><p data-bank-count></p></header>
+          <div class="resource-grid" data-bank-grid></div>
+          <section class="saved-resources"><h2>Meine Sammlung</h2><div data-bank-saved></div></section>
+        </section>
+      </section>
+    </main>
+    <div class="resource-detail-dialog" data-bank-dialog hidden role="dialog" aria-modal="true">
+      <div class="resource-detail-backdrop" data-bank-close></div>
+      <article class="resource-detail-panel"><button type="button" class="resource-detail-close" data-bank-close>×</button><div data-bank-detail></div></article>
+    </div>
+    <script src="../adlercode-resources.js?v=platform-1"></script>
+    <script src="../adlercode.js?v=platform-nav"></script>
+    <script src="../adlercode-platform-bank.js?v=platform-1"></script>
+  </body>
+</html>

@@ -9,11 +9,15 @@ if (siteHeader) {
   const siteRoot = indexUrl.href.replace(/(?:index\.html)?(?:#.*)?$/, "");
   const navItems = [
     ["Start", "index.html"],
+    ["Plattform", "plattform/index.html"],
     ["Musterbibliothek", "musterbibliothek/index.html"],
     ["Bücher", "buecher/index.html"],
+    ["Ressourcenbank", "ressourcenbank/index.html"],
+    ["Werkzeuge", "werkzeuge/index.html"],
     ["Filmanalyse", "filmanalyse/index.html"],
     ["Community", "community/index.html"],
     ["Experten", "experten/index.html"],
+    ["Projekte", "projekte/index.html"],
     ["Adler-Kodex", "adler-kodex/index.html"],
     ["FAQ", "faq/index.html"],
     ["Kontakt", "kontakt.html"],
@@ -396,7 +400,7 @@ if (siteHeader) {
   `;
 
   siteHeader.prepend(headerControls);
-  headerAuthActions.append(personalNav, accountCreateButton, authButton);
+  headerAuthActions.append(personalNav, authButton, accountCreateButton);
   siteHeader.append(headerAuthActions, profileMenu, mobilePanel, authDialog, savePromptDialog, modulePreviewDialog);
 
   const menuIcons = {

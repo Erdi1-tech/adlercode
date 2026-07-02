@@ -7,6 +7,7 @@
   const searchInput = root.querySelector("[data-expert-search]");
   const filterButtons = [...root.querySelectorAll("[data-expert-filter]")];
   const terms = window.ADLERCODE_TERMS;
+  const resourceData = window.ADLERCODE_RESOURCE_DATA;
   let activeFilter = "all";
 
   const experts = [
@@ -28,6 +29,7 @@
       reviews: "38 Bewertungen",
       links: ["Profil ansehen", "Website", "Veröffentlichte Analysen"],
       tags: ["Justice", "Mediation", "Verantwortung"],
+      resourceIds: ["rechtliche-grundlagen-selbststaendige", "kooperationsvertrag-muster"],
     },
     {
       id: "maximilian-stein",
@@ -47,6 +49,7 @@
       reviews: "24 Bewertungen",
       links: ["Profil ansehen", "LinkedIn", "Analysearchiv"],
       tags: ["Business", "Systemanalyse", "Führung"],
+      resourceIds: ["businessplan-basis", "pitch-deck-struktur", "finanzuebersicht-projekte"],
     },
     {
       id: "sara-demir",
@@ -66,6 +69,27 @@
       reviews: "31 Bewertungen",
       links: ["Profil ansehen", "Mind-Analysen", "Videos"],
       tags: ["Mind", "Narrative", "Filmanalyse"],
+      resourceIds: ["gaslighting-checkliste", "vertrauensradar-arbeitsblatt", "adlercode-muster-modell"],
+    },
+    {
+      id: "rechtsberater",
+      name: "Rechtsberater",
+      role: "Rechtliche Grundlagen und Verträge",
+      initials: "RB",
+      verified: true,
+      badge: "Verifizierter Experte",
+      domain: "justice",
+      fields: ["Recht", "Verträge", "Selbstständigkeit", "Dokumentation"],
+      description:
+        "Demo-Profil für einen Rechtsberater, der Orientierung zu einfachen Vertragsmustern, rechtlichen Grundlagen und sauberer Projekt-Dokumentation vorbereitet.",
+      books: ["Adler-System"],
+      videos: ["Verantwortung sauber dokumentieren", "Kooperationen klar strukturieren"],
+      analyses: ["Kooperationskonflikt", "Selbstständigkeit und Verantwortung"],
+      rating: "4,6",
+      reviews: "19 Bewertungen",
+      links: ["Profil ansehen", "Website", "Ressourcenbank"],
+      tags: ["Recht", "Verträge", "Justice"],
+      resourceIds: ["rechtliche-grundlagen-selbststaendige", "kooperationsvertrag-muster"],
     },
   ];
 
@@ -135,6 +159,10 @@
 
   function renderDetail() {
     const expert = selectedExpert();
+    const expertResources = (resourceData?.resources || []).filter((resource) => (expert.resourceIds || []).includes(resource.id));
+    const resourceFilterId = expertResources[0]?.experte || expert.id;
+    const linkedTools = (resourceData?.tools || []).filter((tool) => (tool.expertenIds || []).includes(expert.id) || (tool.expertenIds || []).includes(resourceFilterId));
+    const linkedProjects = (resourceData?.projects || []).filter((project) => (project.expertenIds || []).includes(expert.id) || (project.expertenIds || []).includes(resourceFilterId));
     detailRoot.innerHTML = `
       <article class="expert-profile">
         <header class="expert-profile-hero">
@@ -178,6 +206,14 @@
             <strong>${expert.analyses.length}</strong>
             <span>Analysen</span>
           </div>
+          <div>
+            <strong>${expertResources.length}</strong>
+            <span>Ressourcen</span>
+          </div>
+          <div>
+            <strong>${linkedTools.length}</strong>
+            <span>Werkzeuge</span>
+          </div>
         </section>
 
         <section class="expert-section" aria-labelledby="expert-fields-title">
@@ -192,6 +228,22 @@
           ${renderResourceList("Links", expert.links)}
         </section>
 
+        <section class="expert-section expert-linked-resources" aria-labelledby="expert-resources-title">
+          <div class="expert-section-head">
+            <h3 id="expert-resources-title">Ressourcen</h3>
+            <a href="../ressourcenbank/?experte=${encodeURIComponent(resourceFilterId)}">Ressourcen ansehen</a>
+          </div>
+          <div data-expert-resource-cards></div>
+        </section>
+
+        <section class="expert-section expert-linked-resources" aria-labelledby="expert-tools-title">
+          <div class="expert-section-head">
+            <h3 id="expert-tools-title">Werkzeuge und Projekte</h3>
+            <a href="../werkzeuge/">Werkzeugbank öffnen</a>
+          </div>
+          <div data-expert-platform-cards></div>
+        </section>
+
         <section class="expert-community-note" aria-label="Zukünftige Expertenfunktionen">
           <h3>Community-Interaktion</h3>
           <p>Experten können später eigene Analysen veröffentlichen, öffentliche Diskussionen begleiten und mit der Community interagieren.</p>
@@ -202,6 +254,44 @@
         </section>
       </article>
     `;
+    const resourceRoot = detailRoot.querySelector("[data-expert-resource-cards]");
+    if (resourceRoot) {
+      resourceRoot.innerHTML = expertResources.length
+        ? expertResources
+            .map(
+              (resource) => `
+                <article class="expert-resource-preview">
+                  <span>${escapeHtml(resource.typ)} · ${escapeHtml(resource.kategorie)}</span>
+                  <h4>${escapeHtml(resource.titel)}</h4>
+                  <p>${escapeHtml(resource.beschreibung)}</p>
+                  <a href="../ressourcenbank/?experte=${encodeURIComponent(resourceFilterId)}">In der Ressourcenbank ansehen</a>
+                </article>
+              `,
+            )
+            .join("")
+        : `<div class="analysis-empty"><p>Noch keine Ressourcen verknüpft.</p></div>`;
+    }
+    const platformRoot = detailRoot.querySelector("[data-expert-platform-cards]");
+    if (platformRoot) {
+      const linkedItems = [
+        ...linkedTools.map((tool) => ({ ...tool, typeLabel: "Werkzeug", href: "../werkzeuge/" })),
+        ...linkedProjects.map((project) => ({ ...project, typeLabel: "Projekt", href: "../projekte/" })),
+      ];
+      platformRoot.innerHTML = linkedItems.length
+        ? linkedItems
+            .map(
+              (item) => `
+                <article class="expert-resource-preview">
+                  <span>${escapeHtml(item.typeLabel)} · ${escapeHtml(item.kategorie || item.status || "Adlercode")}</span>
+                  <h4>${escapeHtml(item.titel)}</h4>
+                  <p>${escapeHtml(item.beschreibung)}</p>
+                  <a href="${escapeHtml(item.href)}">Öffnen</a>
+                </article>
+              `,
+            )
+            .join("")
+        : `<div class="analysis-empty"><p>Noch keine Werkzeuge oder Projekte verknüpft.</p></div>`;
+    }
     terms?.linkify?.(detailRoot);
   }
 
