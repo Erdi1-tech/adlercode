@@ -105,6 +105,16 @@
     `;
   }
 
+  function tagBlock(title, tags = []) {
+    if (!tags.length) return "";
+    return `
+      <section class="platform-detail-linked">
+        <h3>${escapeHtml(title)}</h3>
+        <div>${tags.slice(0, 8).map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</div>
+      </section>
+    `;
+  }
+
   function openDetail(id) {
     const item = config.items.find((entry) => entry.id === id);
     if (!item || !dialog || !detailRoot) return;
@@ -124,6 +134,13 @@
       ${linkedBlock("Passende Werkzeuge", data.getToolsByIds(item.werkzeugIds || []))}
       ${linkedBlock("Passende Experten", data.getExpertsByIds(item.expertenIds || []))}
       ${linkedBlock("Passende Projekte", data.getProjectsByIds(item.projektIds || []))}
+      ${tagBlock("Passende Muster", item.tags || [])}
+      ${linkedBlock("Diskussionen", (data.communityPosts || []).filter((post) => (item.tags || []).some((tag) => post.titel.toLowerCase().includes(String(tag).toLowerCase())) || post.kategorie === item.kategorie).slice(0, 3))}
+      ${linkedBlock("Weiterlernen", [
+        ...data.getResourcesByIds(item.ressourcenIds || []).slice(0, 2),
+        ...data.getToolsByIds(item.werkzeugIds || []).slice(0, 2),
+        ...data.getExpertsByIds(item.expertenIds || []).slice(0, 2),
+      ])}
     `;
     dialog.hidden = false;
   }

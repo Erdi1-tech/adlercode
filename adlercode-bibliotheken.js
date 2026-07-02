@@ -223,6 +223,56 @@ if (adlerLibrariesRoot) {
     `;
   }
 
+  function matchesNetworkItem(source, labels) {
+    const text = [
+      source.titel,
+      source.name,
+      source.problem,
+      source.frage,
+      source.beschreibung,
+      source.fachgebiet,
+      source.kategorie,
+      ...(source.tags || []),
+      ...(source.themen || []),
+    ].join(" ").toLowerCase();
+    return labels.some((label) => text.includes(String(label).toLowerCase()));
+  }
+
+  function renderNetworkGroup(title, items) {
+    if (!items.length) return "";
+    return `
+      <section class="library-network-group">
+        <h3>${escapeHtml(title)}</h3>
+        <div>${items.slice(0, 5).map((entryItem) => `<span>${escapeHtml(entryItem.titel || entryItem.name || entryItem.problem || entryItem.frage)}</span>`).join("")}</div>
+      </section>
+    `;
+  }
+
+  function renderPlatformNetwork(item) {
+    const data = window.ADLERCODE_PLATFORM_DATA;
+    if (!data) return "";
+    const labels = [item.title, item.group, item.category, ...(item.properties || []), ...(item.related || []), ...(item.books || [])].filter(Boolean);
+    const matchingResources = data.resources.filter((entryItem) => matchesNetworkItem(entryItem, labels));
+    const resources = matchingResources.filter((entryItem) => entryItem.typ !== "Buch");
+    const tools = data.tools.filter((entryItem) => matchesNetworkItem(entryItem, labels));
+    const experts = data.experts.filter((entryItem) => matchesNetworkItem(entryItem, labels));
+    const projects = data.projects.filter((entryItem) => matchesNetworkItem(entryItem, labels));
+    const discussions = data.communityPosts.filter((entryItem) => matchesNetworkItem(entryItem, labels));
+    const books = matchingResources.filter((entryItem) => entryItem.typ === "Buch");
+    if (!(resources.length || tools.length || experts.length || projects.length || discussions.length || books.length)) return "";
+    return `
+      <section class="library-network">
+        <h2>Passende Inhalte</h2>
+        ${renderNetworkGroup("Verwandte Ressourcen", resources)}
+        ${renderNetworkGroup("Passende Werkzeuge", tools)}
+        ${renderNetworkGroup("Passende Experten", experts)}
+        ${renderNetworkGroup("Verwandte Projekte", projects)}
+        ${renderNetworkGroup("Passende Bücher", books)}
+        ${renderNetworkGroup("Diskussionen", discussions)}
+      </section>
+    `;
+  }
+
   function setMenu(open) {
     adlerLibrariesRoot.classList.toggle("is-nav-open", open);
     menuButton?.setAttribute("aria-expanded", String(open));
@@ -295,6 +345,7 @@ if (adlerLibrariesRoot) {
           >Diskussion starten</button>
         </header>
         ${renderRelatedTerms(item)}
+        ${renderPlatformNetwork(item)}
       </article>
     `;
   }

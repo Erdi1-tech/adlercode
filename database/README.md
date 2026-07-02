@@ -2,6 +2,22 @@
 
 Dieses System bildet das Herzstueck der Plattform: Jeder Datensatz wird als Entity registriert und kann ueber `adler_links` mit jedem anderen Datensatz verbunden werden.
 
+## Supabase Migration
+
+Die produktionsreife Supabase-Grundlage liegt in `database/migrations/`.
+
+Empfohlene Reihenfolge:
+
+1. `001_supabase_core_schema.sql`
+2. `002_rls_policies.sql`
+3. `003_storage_buckets.sql`
+4. `004_realtime_publication.sql`
+5. `005_ai_preparation.sql`
+
+Die technische Migrationsdokumentation liegt unter `docs/SUPABASE_MIGRATION.md`.
+
+Das vorhandene `adlercode-link-system.sql` bleibt als frueher Entwurf des globalen Verknuepfungssystems erhalten. Fuer neue Supabase-Projekte sollte die Migrationsstruktur verwendet werden.
+
 ## Prinzip
 
 1. Ein realer Datensatz entsteht, z. B. ein Justice-Fall, ein Begriff, ein Film oder ein Buch.

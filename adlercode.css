@@ -6189,6 +6189,29 @@ a.justice-dashboard-card:focus-visible,
   line-height: 1.75;
 }
 
+.resource-source-status {
+  margin: 10px 0 0;
+  width: fit-content;
+  max-width: min(100%, 520px);
+  border: 1px solid rgba(244, 241, 234, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.025);
+  padding: 7px 12px;
+  color: rgba(244, 241, 234, 0.56);
+  font-size: 0.76rem;
+  line-height: 1.35;
+}
+
+.resource-source-status.is-live {
+  border-color: rgba(200, 164, 91, 0.28);
+  color: rgba(244, 241, 234, 0.76);
+}
+
+.resource-source-status.is-error {
+  border-color: rgba(255, 120, 120, 0.28);
+  color: rgba(255, 205, 205, 0.78);
+}
+
 .resource-search {
   position: relative;
   width: min(720px, 100%);
@@ -7155,6 +7178,60 @@ a.justice-dashboard-card:focus-visible,
 
 .platform-search-results {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.library-network,
+.book-network {
+  display: grid;
+  gap: 12px;
+  margin-top: 22px;
+  border-top: 1px solid rgba(244, 241, 234, 0.08);
+  padding-top: 18px;
+}
+
+.library-network h2,
+.book-network h3 {
+  margin: 0;
+  color: rgba(244, 241, 234, 0.9);
+  font-size: 0.98rem;
+  font-weight: 680;
+}
+
+.library-network-group,
+.book-network-group {
+  display: grid;
+  gap: 5px;
+  border: 1px solid rgba(244, 241, 234, 0.08);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.024);
+  padding: 11px 12px;
+}
+
+.library-network-group h3,
+.book-network-group strong {
+  margin: 0;
+  color: rgba(200, 164, 91, 0.82);
+  font-size: 0.74rem;
+  font-weight: 760;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.library-network-group div,
+.book-network-group span {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  color: rgba(244, 241, 234, 0.68);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.library-network-group span {
+  border: 1px solid rgba(244, 241, 234, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 5px 8px;
 }
 
 @media (max-width: 980px) {
